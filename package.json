@@ -1,0 +1,23 @@
+{
+  "name": "cpr-hero",
+  "version": "1.0.0",
+  "description": "CPR HERO - Interactive educational 2D retro arcade game teaching CPR rhythm",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "cpr",
+    "first-aid",
+    "game",
+    "education"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "sqlite3": "^6.0.1"
+  },
+  "author": "",
+  "type": "commonjs"
+}

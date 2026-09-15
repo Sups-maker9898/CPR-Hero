@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CPR HERO — Phase 1</title>
+
+  <!-- Retro pixel font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================
+       PHASE 1: RETRO CSS STYLING
+       This section controls how everything LOOKS on screen.
+       The game drawing itself happens on the <canvas> below.
+    ========================================================== */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #1a1a2e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --text: #eaeaea;
+      --green: #4ecca3;
+      --yellow: #f5c518;
+      --red: #ff4444;
+    }
+
+    body {
+      font-family: 'Press Start 2P', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Side-by-side layout: game + AI assistant */
+    #app-layout {
+      display: flex;
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 10px 24px;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #main-column {
+      flex: 1 1 520px;
+      min-width: 0;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header, #leaderboard-panel, #game-container {
+      width: 100%;
+    }
+
+    /* Subtle CRT scanline effect for retro feel */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.07) 2px,
+        rgba(0, 0, 0, 0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    header {
+      text-align: center;
+      padding: 16px 12px 8px;
+      width: 100%;
+    }
+
+    header h1 {
+      font-size: clamp(14px, 4vw, 26px);
+      color: var(--accent);
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    header p {
+      font-size: clamp(6px, 1.5vw, 9px);
+      margin-top: 8px;
+      color: #888;
+      line-height: 1.8;
+    }
+
+    /* Wrapper holds canvas + overlay menus on top */
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 820px;
+      padding: 0 10px 24px;
+    }
+
+    /* The 800x600 game drawing surface (internal resolution stays fixed) */
+    #game-canvas {
+      display: block;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border: 4px solid var(--accent2);
+      box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+      image-rendering: pixelated;
+      cursor: pointer;
+      touch-action: none; /* prevents page scroll when tapping canvas on mobile */
+    }
+
+    /* Overlay panels sit ON TOP of the canvas for menus / trivia / results */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 26, 46, 0.93);
+      z-index: 10;
+      padding: 20px;
+      text-align: center;
+      gap: 14px;
+    }
+
+    .overlay.active { display: flex; }
+
+    .overlay h2 {
+      font-size: clamp(10px, 2.5vw, 16px);
+      color: var(--accent);
+      line-height: 1.6;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .overlay p, .overlay label {
+      font-size: clamp(6px, 1.4vw, 9px);
+      line-height: 2;
+      color: #ccc;
+    }
+
+    .retro-input {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(8px, 2vw, 11px);
+      padding: 12px 16px;
+      background: #0a0a1a;
+      border: 3px solid var(--accent2);
+      color: var(--text);
+      text-align: center;
+      width: min(300px, 90%);
+      outline: none;
+    }
+
+    .retro-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(233, 69, 96, 0.4);
+    }
+
+    .retro-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(7px, 1.7vw, 10px);
+      padding: 14px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: 3px solid #fff;
+      cursor: pointer;
+      min-height: 48px;
+      min-width: 48px;
+      transition: transform 0.1s;
+    }
+
+    .retro-btn:hover, .retro-btn:focus {
+      background: #ff6b81;
+      transform: scale(1.04);
+      outline: 2px solid var(--yellow);
+    }
+
+    .retro-btn.secondary {
+      background: var(--accent2);
+      border-color: var(--green);
+    }
+
+    .retro-btn.call911 {
+      background: #cc0000;
+      animation: pulse911 1s infinite;
+    }
+
+    @keyframes pulse911 {
+      0%, 100% { box-shadow: 0 0 8px #ff0000; }
+      50% { box-shadow: 0 0 28px #ff4444; }
+    }
+
+    #leaderboard-panel {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 12px;
+      border: 3px solid var(--accent2);
+      background: rgba(15, 52, 96, 0.45);
+      padding: 12px;
+    }
+
+    #leaderboard-panel h3 {
+      font-size: clamp(7px, 1.7vw, 9px);
+      color: var(--green);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    #leaderboard-list {
+      list-style: none;
+      font-size: clamp(5px, 1.2vw, 8px);
+      line-height: 2.2;
+    }
+
+    #leaderboard-list li {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 4px;
+    }
+
+    #trivia-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(520px, 95%);
+    }
+
+    #trivia-lives {
+      font-size: clamp(20px, 5vw, 32px);
+      color: #ff0000;
+      letter-spacing: 8px;
+      line-height: 1.4;
+      text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255, 0, 0, 0.5);
+      margin: 4px 0;
+    }
+
+    #trivia-lives .life-lost {
+      color: #663333;
+      text-shadow: none;
+    }
+
+    #trivia-options .retro-btn {
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.6;
+      text-align: left;
+      white-space: normal;
+    }
+
+    #trivia-options .retro-btn:disabled {
+      opacity: 0.85;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #trivia-options .trivia-btn-correct {
+      background: #1b6b42 !important;
+      border-color: var(--green) !important;
+      box-shadow: 0 0 16px rgba(78, 204, 163, 0.8);
+    }
+
+    #trivia-options .trivia-btn-wrong {
+      background: #6b1b1b !important;
+      border-color: var(--red) !important;
+      box-shadow: 0 0 16px rgba(255, 68, 68, 0.8);
+      animation: triviaBtnWrong 0.45s ease;
+    }
+
+    #trivia-options .trivia-btn-reveal {
+      border-color: var(--green) !important;
+      box-shadow: 0 0 12px rgba(78, 204, 163, 0.5);
+    }
+
+    #trivia-feedback {
+      font-size: clamp(10px, 2.5vw, 18px);
+      line-height: 1.6;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    #trivia-feedback.show-correct {
+      color: var(--green);
+      animation: triviaCorrectPop 0.7s ease forwards;
+    }
+
+    #trivia-feedback.show-wrong {
+      color: var(--red);
+      animation: triviaWrongPop 0.7s ease forwards;
+    }
+
+    #trivia-feedback .feedback-icon {
+      font-size: clamp(16px, 4vw, 28px);
+      display: inline-block;
+    }
+
+    #trivia-feedback.show-correct .feedback-icon {
+      animation: iconBounce 0.6s ease;
+    }
+
+    #trivia-feedback.show-wrong .feedback-icon {
+      animation: iconShake 0.5s ease;
+    }
+
+    #trivia-overlay.flash-correct {
+      animation: overlayFlashGreen 0.6s ease;
+    }
+
+    #trivia-overlay.flash-wrong {
+      animation: overlayFlashRed 0.6s ease;
+    }
+
+    @keyframes triviaCorrectPop {
+      0% { opacity: 0; transform: scale(0.4); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes triviaWrongPop {
+      0% { opacity: 0; transform: translateX(0) scale(0.8); }
+      20% { opacity: 1; transform: translateX(-8px) scale(1); }
+      40% { transform: translateX(8px) scale(1); }
+      60% { transform: translateX(-6px) scale(1); }
+      80% { transform: translateX(6px) scale(1); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes triviaBtnWrong {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-12px); }
+      60% { transform: translateY(-6px); }
+    }
+
+    @keyframes iconShake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-12deg); }
+      75% { transform: rotate(12deg); }
+    }
+
+    @keyframes overlayFlashGreen {
+      0%, 100% { background: rgba(26, 26, 46, 0.93); }
+      40% { background: rgba(30, 80, 50, 0.95); }
+    }
+
+    @keyframes overlayFlashRed {
+      0%, 100% { background: rgba(26, 26, 46, 0.93); }
+      40% { background: rgba(80, 20, 30, 0.95); }
+    }
+
+    #touch-hint {
+      display: none;
+      text-align: center;
+      font-size: clamp(6px, 1.3vw, 8px);
+      color: var(--yellow);
+      margin-top: 6px;
+    }
+
+    #compress-btn {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 10px auto 0;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(8px, 2vw, 11px);
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      border: 3px solid #fff;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 0 #8b1530;
+    }
+
+    #compress-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #8b1530;
+    }
+
+    #compress-btn.visible {
+      display: block;
+    }
+
+    #score-breakdown {
+      font-size: clamp(6px, 1.3vw, 8px);
+      line-height: 2.2;
+      color: var(--green);
+      text-align: left;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ==========================================================
+       AI ASSISTANT PANEL (Coach Pulse — always visible)
+    ========================================================== */
+    #ai-assistant {
+      flex: 0 0 300px;
+      width: 300px;
+      max-width: 100%;
+      min-height: 520px;
+      max-height: calc(100vh - 24px);
+      position: sticky;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid var(--green);
+      background: rgba(8, 12, 28, 0.97);
+      box-shadow: 0 0 24px rgba(78, 204, 163, 0.15);
+      z-index: 100;
+    }
+
+    .assistant-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 3px solid var(--accent2);
+      background: rgba(15, 52, 96, 0.6);
+    }
+
+    .assistant-avatar {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--green);
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      animation: avatarPulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(78, 204, 163, 0.3); }
+      50% { box-shadow: 0 0 14px rgba(78, 204, 163, 0.7); }
+    }
+
+    .assistant-title {
+      font-size: clamp(7px, 1.6vw, 9px);
+      color: var(--green);
+      line-height: 1.6;
+    }
+
+    .assistant-title span {
+      display: block;
+      color: #888;
+      font-size: clamp(5px, 1.2vw, 7px);
+      margin-top: 4px;
+    }
+
+    #assistant-chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 280px;
+    }
+
+    .chat-msg {
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.9;
+      padding: 10px;
+      border: 2px solid var(--accent2);
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    .chat-msg.bot {
+      background: rgba(15, 52, 96, 0.55);
+      border-color: var(--green);
+      color: #dceee6;
+      align-self: flex-start;
+    }
+
+    .chat-msg.user {
+      background: rgba(233, 69, 96, 0.2);
+      border-color: var(--accent);
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .chat-msg.tip {
+      border-color: var(--yellow);
+      background: rgba(245, 197, 24, 0.08);
+      color: var(--yellow);
+    }
+
+    .chat-typing {
+      font-size: clamp(5px, 1.2vw, 7px);
+      color: #888;
+      padding: 4px 10px;
+      display: none;
+    }
+
+    .chat-typing.active {
+      display: block;
+      animation: typingBlink 1s infinite;
+    }
+
+    @keyframes typingBlink {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    #assistant-quick-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 10px 0;
+    }
+
+    .topic-chip {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(4px, 1vw, 6px);
+      padding: 8px 8px;
+      background: var(--accent2);
+      color: var(--text);
+      border: 2px solid #335588;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+
+    .topic-chip:hover, .topic-chip:focus {
+      border-color: var(--green);
+      outline: none;
+    }
+
+    #assistant-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 3px solid var(--accent2);
+    }
+
+    #assistant-input {
+      flex: 1;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(5px, 1.2vw, 7px);
+      padding: 10px 8px;
+      background: #0a0a1a;
+      border: 2px solid var(--accent2);
+      color: var(--text);
+      outline: none;
+      min-width: 0;
+    }
+
+    #assistant-input:focus {
+      border-color: var(--green);
+    }
+
+    #assistant-send {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(5px, 1.2vw, 7px);
+      padding: 10px 10px;
+      background: var(--green);
+      color: #0a0a1a;
+      border: 2px solid #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 960px) {
+      #app-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #ai-assistant {
+        flex: none;
+        width: 100%;
+        max-width: 820px;
+        position: relative;
+        top: 0;
+        min-height: 360px;
+        max-height: 420px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-layout">
+
+  <div id="main-column">
+
+  <!-- ==========================================================
+       MAIN PAGE (Landing / Homepage)
+       This is the first screen players see.
+  ========================================================== -->
+  <header>
+    <h1>CPR HERO</h1>
+    <p>Learn life-saving CPR rhythm. Keep them alive until help arrives.</p>
+  </header>
+
+  <!-- Leaderboard panel (Phase 1 uses local placeholder data) -->
+  <div id="leaderboard-panel">
+    <h3>-- LEADERBOARD --</h3>
+    <ul id="leaderboard-list">
+      <li><span>Play a round to see scores here!</span><span></span></li>
+    </ul>
+  </div>
+
+  <div id="game-container">
+    <!-- HTML5 Canvas = our 2D drawing board -->
+    <canvas id="game-canvas" width="800" height="600" tabindex="0" aria-label="CPR HERO game canvas — press Spacebar or click to compress"></canvas>
+    <p id="touch-hint">TAP THE SCREEN TO COMPRESS</p>
+    <button type="button" id="compress-btn" aria-label="Compress chest — Spacebar or click">COMPRESS — SPACEBAR / CLICK</button>
+
+    <!-- START / LOGIN OVERLAY -->
+    <div id="start-overlay" class="overlay active">
+      <h2>ENTER YOUR HERO NAME</h2>
+      <p>Keep the patient alive until the ambulance arrives.</p>
+      <label for="player-name">HERO NAME</label>
+      <input id="player-name" class="retro-input" maxlength="20" placeholder="Your name..." aria-label="Player name">
+      <button id="start-btn" class="retro-btn">START MISSION</button>
+    </div>
+
+    <!-- INTRO STORY OVERLAY -->
+    <div id="narrative-overlay" class="overlay">
+      <h2 id="narrative-text"></h2>
+      <button id="narrative-btn" class="retro-btn secondary">CONTINUE</button>
+      <button id="call911-btn" class="retro-btn call911 hidden">TAP TO CALL 911</button>
+    </div>
+
+    <!-- TRIVIA SAFETY NET OVERLAY -->
+    <div id="trivia-overlay" class="overlay">
+      <h2>FIRST AID TRIVIA</h2>
+      <p id="trivia-lives"></p>
+      <p id="trivia-question" style="color: var(--yellow); line-height: 1.8;"></p>
+      <div id="trivia-feedback" aria-live="polite"></div>
+      <div id="trivia-options"></div>
+    </div>
+
+    <!-- WIN OVERLAY -->
+    <div id="win-overlay" class="overlay">
+      <h2>AMBULANCE ARRIVED!</h2>
+      <p>You kept them alive. Paramedic gives a thumbs-up!</p>
+    </div>
+
+    <!-- LOSE OVERLAY -->
+    <div id="gameover-overlay" class="overlay">
+      <h2>GAME OVER</h2>
+      <p>Every second counts. Practice makes perfect.</p>
+    </div>
+
+    <!-- RESULTS OVERLAY -->
+    <div id="results-overlay" class="overlay">
+      <h2>MISSION REPORT</h2>
+      <div id="score-breakdown"></div>
+      <button id="retry-btn" class="retro-btn">TRY AGAIN</button>
+    </div>
+  </div>
+
+  </div><!-- /main-column -->
+
+  <!-- AI MEDICAL COACH — stays open for the entire game -->
+  <aside id="ai-assistant" aria-label="CPR training assistant">
+    <div class="assistant-header">
+      <div class="assistant-avatar" aria-hidden="true">🩺</div>
+      <div class="assistant-title">
+        COACH PULSE
+        <span>CPR & First Aid Guide</span>
+      </div>
+    </div>
+    <div id="assistant-chat" aria-live="polite"></div>
+    <p id="assistant-typing" class="chat-typing">Coach Pulse is typing...</p>
+    <div id="assistant-quick-topics">
+      <button type="button" class="topic-chip" data-topic="tutorial">Tutorial</button>
+      <button type="button" class="topic-chip" data-topic="cpr">CPR Basics</button>
+      <button type="button" class="topic-chip" data-topic="game">How to Play</button>
+      <button type="button" class="topic-chip" data-topic="firstaid">First Aid</button>
+      <button type="button" class="topic-chip" data-topic="emergency">Call 911</button>
+    </div>
+    <div id="assistant-input-row">
+      <input id="assistant-input" type="text" maxlength="120" placeholder="Ask about CPR..." aria-label="Ask Coach Pulse a question">
+      <button id="assistant-send" type="button" aria-label="Send message">SEND</button>
+    </div>
+  </aside>
+
+  </div><!-- /app-layout -->
+
+  <script>
+    // ============================================================
+    // CPR HERO — PHASE 1: FRONTEND GAME ENGINE
+    // ============================================================
+    // This file is SELF-CONTAINED. No Node.js server is required yet.
+    // Phase 2 will connect the placeholder API functions at the bottom.
+    // ============================================================
+
+    // --- CANVAS SETUP ---
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const CW = canvas.width;   // 800 pixels wide
+    const CH = canvas.height;  // 600 pixels tall
+
+    // --- DOM REFERENCES (HTML elements we control with JavaScript) ---
+    const overlays = {
+      start: document.getElementById('start-overlay'),
+      narrative: document.getElementById('narrative-overlay'),
+      trivia: document.getElementById('trivia-overlay'),
+      win: document.getElementById('win-overlay'),
+      gameover: document.getElementById('gameover-overlay'),
+      results: document.getElementById('results-overlay')
+    };
+
+    const playerNameInput = document.getElementById('player-name');
+    const startBtn = document.getElementById('start-btn');
+    const narrativeText = document.getElementById('narrative-text');
+    const narrativeBtn = document.getElementById('narrative-btn');
+    const call911Btn = document.getElementById('call911-btn');
+    const triviaQuestion = document.getElementById('trivia-question');
+    const triviaOptions = document.getElementById('trivia-options');
+    const triviaLives = document.getElementById('trivia-lives');
+    const triviaFeedback = document.getElementById('trivia-feedback');
+    const triviaOverlay = document.getElementById('trivia-overlay');
+    const scoreBreakdown = document.getElementById('score-breakdown');
+    const retryBtn = document.getElementById('retry-btn');
+    const leaderboardList = document.getElementById('leaderboard-list');
+    const touchHint = document.getElementById('touch-hint');
+    const compressBtn = document.getElementById('compress-btn');
+
+    // --- GAME CONSTANTS (tunable rules) ---
+    const BPM = 110;
+    const BEAT_INTERVAL = 60000 / BPM; // 545.45ms between beats
+    const PERFECT_WINDOW = 65;       // ±65ms = PERFECT
+    const GOOD_WINDOW = 130;         // ±130ms = GOOD
+    const GAME_DURATION_MS = 120000; // 2-minute ambulance timer
+    const MAX_LIVES = 3;
+    const STREAK_MULTIPLIER_AT = 10; // 2x points after 10 perfect hits in a row
+
+    const RING_MAX_RADIUS = 120;
+    const RING_TARGET_RADIUS = 40;
+    const CENTER_X = CW / 2;
+    const CENTER_Y = CH / 2 + 30;
+
+    // --- GAME STATES (the "chapters" of our game) ---
+    const STATE = {
+      START: 'START',
+      NARRATIVE: 'NARRATIVE',
+      PLAYING: 'PLAYING',
+      TRIVIA: 'TRIVIA',
+      WIN: 'WIN',
+      GAME_OVER: 'GAME_OVER',
+      RESULTS: 'RESULTS'
+    };
+
+    // --- TRIVIA QUESTIONS (10 first-aid questions) ---
+    const TRIVIA_BANK = [
+      {
+        question: 'What should you do first if someone is unconscious?',
+        options: [
+          'Run away',
+          'Check if they respond and call for help',
+          'Give them food',
+          'Pour water on them'
+        ],
+        correct: 1
+      },
+      {
+        question: 'What phone number should you call in an emergency?',
+        options: [
+          "Your friend's number",
+          'Pizza shop',
+          'Emergency services number (e.g., 119, 911, 112)',
+          'School number'
+        ],
+        correct: 2
+      },
+      {
+        question: 'What does CPR help with?',
+        options: [
+          'Making someone taller',
+          'Helping blood and oxygen move through the body',
+          'Making someone sleep',
+          'Fixing broken toys'
+        ],
+        correct: 1
+      },
+      {
+        question: 'If someone is bleeding from a small cut, what should you do?',
+        options: [
+          'Ignore it',
+          'Put dirt on it',
+          'Clean it and cover it with a bandage',
+          'Touch it with dirty hands'
+        ],
+        correct: 2
+      },
+      {
+        question: 'If a person is choking and cannot speak, what should you do?',
+        options: [
+          'Give them more food',
+          'Ask an adult or call for help immediately',
+          'Tell them to lie down and sleep',
+          'Leave them alone'
+        ],
+        correct: 1
+      },
+      {
+        question: 'Where should you place your hands during CPR?',
+        options: [
+          "On the person's knee",
+          'On the center of the chest',
+          'On the forehead',
+          'On the foot'
+        ],
+        correct: 1
+      },
+      {
+        question: 'If someone gets a burn from something hot, what should you do?',
+        options: [
+          'Put ice directly on it',
+          'Cool it with running water',
+          'Cover it with mud',
+          'Scratch it'
+        ],
+        correct: 1
+      },
+      {
+        question: 'Before helping someone, what should you check?',
+        options: [
+          'If the area is safe',
+          'If they have toys',
+          'If they are wearing shoes',
+          'If they like sports'
+        ],
+        correct: 0
+      },
+      {
+        question: 'If someone falls and may have hurt their neck, what should you do?',
+        options: [
+          'Move them quickly',
+          'Tell them to run',
+          'Keep them still and call for help',
+          'Lift them onto your back'
+        ],
+        correct: 2
+      },
+      {
+        question: 'What is the correct CPR rhythm often compared to?',
+        options: [
+          'A slow turtle walk',
+          'The beat of the song "Stayin\' Alive"',
+          'A sleeping cat',
+          'A whisper'
+        ],
+        correct: 1
+      }
+    ];
+
+    const NARRATIVE_BEATS = [
+      'You are walking down the street on a normal day...',
+      'Suddenly, someone collapses on the sidewalk!',
+      'They are unconscious and not responding.',
+      'You must act NOW. Every second counts!',
+      'Call emergency services and perform CPR until help arrives.'
+    ];
+
+    // --- LIVE GAME VARIABLES (change during play) ---
+    let state = STATE.START;
+    let playerName = '';
+    let narrativeIndex = 0;
+
+    let remainingMs = GAME_DURATION_MS;
+    let oxygen = 100;
+    let lives = MAX_LIVES;
+    let streak = 0;
+
+    let perfectCompressions = 0;
+    let goodCompressions = 0;
+    let misses = 0;
+    let correctTrivia = 0;
+    let compressionPoints = 0;
+    let streakMultiplierPerfects = 0;
+
+    // Rhythm engine variables
+    let beatStartTime = 0;
+    let currentBeatIndex = 0;
+    let beatInputHandled = false;
+    let ringProgress = 0;
+    let beatPulse = 0;
+    let lastHitFeedback = { text: '', color: '', time: 0 };
+
+    // Trivia tracking
+    let usedTriviaIndices = [];
+    let currentTriviaIndex = -1;
+    let triviaAnimating = false;
+
+    // Win animation
+    let winAnimStart = 0;
+
+    // Phase 1 local leaderboard (temporary until Phase 2 backend)
+
+    // Detect touch devices for control hints
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) touchHint.style.display = 'block';
+
+    // --- SIMPLE WEB AUDIO BEEPS (no external sound files in Phase 1) ---
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, duration, type = 'square', volume = 0.07) {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = volume;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // --- OVERLAY HELPERS ---
+    function showOverlay(name) {
+      Object.values(overlays).forEach(o => o.classList.remove('active'));
+      if (overlays[name]) overlays[name].classList.add('active');
+    }
+
+    function hideAllOverlays() {
+      Object.values(overlays).forEach(o => o.classList.remove('active'));
+    }
+
+    // --- SCORE MATH ---
+    function calculateFinalScore(timeBonusSeconds) {
+      return compressionPoints + (correctTrivia * 50) + (timeBonusSeconds * 5);
+    }
+
+    function getPerfectPoints() {
+      // Streak multiplier: 2x points once streak reaches 10+
+      return streak >= STREAK_MULTIPLIER_AT ? 20 : 10;
+    }
+
+    // ============================================================
+    // BACKEND HOOKS (SQLite via Node.js /api routes)
+    // ============================================================
+
+    async function submitFinalScore(name, score, analytics) {
+      const response = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, score })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to save score');
+      }
+
+      return response.json();
+    }
+
+    async function fetchGlobalLeaderboard() {
+      const response = await fetch('/api/leaderboard');
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to load leaderboard');
+      }
+
+      return response.json();
+    }
+
+    function renderLeaderboard(entries) {
+      if (!entries || entries.length === 0) {
+        leaderboardList.innerHTML = '<li><span>No scores yet. Be the first hero!</span><span></span></li>';
+        return;
+      }
+
+      leaderboardList.innerHTML = entries.map((entry, index) =>
+        `<li><span>#${index + 1} ${escapeHtml(entry.name)}</span><span>${entry.score} pts</span></li>`
+      ).join('');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // --- STATE MACHINE ---
+    function setState(newState) {
+      state = newState;
+
+      switch (newState) {
+        case STATE.START:
+          showOverlay('start');
+          break;
+        case STATE.NARRATIVE:
+          narrativeIndex = 0;
+          showNarrativeBeat();
+          break;
+        case STATE.PLAYING:
+          hideAllOverlays();
+          initPlaying();
+          break;
+        case STATE.TRIVIA:
+          showOverlay('trivia');
+          showTriviaQuestion();
+          break;
+        case STATE.WIN:
+          showOverlay('win');
+          winAnimStart = performance.now();
+          setTimeout(() => endGame(true), 2200);
+          break;
+        case STATE.GAME_OVER:
+          showOverlay('gameover');
+          setTimeout(() => endGame(false), 1800);
+          break;
+        case STATE.RESULTS:
+          showOverlay('results');
+          break;
+      }
+
+      if (window.CoachPulse) CoachPulse.onGameState(newState);
+      updateCompressControls();
+    }
+
+    function resetGame() {
+      remainingMs = GAME_DURATION_MS;
+      oxygen = 100;
+      lives = MAX_LIVES;
+      streak = 0;
+      perfectCompressions = 0;
+      goodCompressions = 0;
+      misses = 0;
+      correctTrivia = 0;
+      compressionPoints = 0;
+      streakMultiplierPerfects = 0;
+      currentBeatIndex = 0;
+      beatInputHandled = false;
+      ringProgress = 0;
+      beatPulse = 0;
+      usedTriviaIndices = [];
+      currentTriviaIndex = -1;
+      narrativeIndex = 0;
+      lastHitFeedback = { text: '', color: '', time: 0 };
+    }
+
+    // --- INTRO STORY ---
+    function showNarrativeBeat() {
+      showOverlay('narrative');
+
+      if (narrativeIndex < NARRATIVE_BEATS.length) {
+        narrativeText.textContent = NARRATIVE_BEATS[narrativeIndex];
+        narrativeBtn.classList.remove('hidden');
+        call911Btn.classList.add('hidden');
+      } else {
+        narrativeText.textContent = 'Tap to call 911!';
+        narrativeBtn.classList.add('hidden');
+        call911Btn.classList.remove('hidden');
+      }
+    }
+
+    function advanceNarrative() {
+      narrativeIndex++;
+      showNarrativeBeat();
+      if (window.CoachPulse) CoachPulse.onNarrativeStep(narrativeIndex);
+    }
+
+    function isTypingInTextField() {
+      const el = document.activeElement;
+      if (!el) return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+    }
+
+    function updateCompressControls() {
+      const playing = state === STATE.PLAYING;
+      compressBtn.classList.toggle('visible', playing);
+      if (playing) {
+        canvas.focus({ preventScroll: true });
+      }
+    }
+
+    // --- RHYTHM ENGINE ---
+    function initPlaying() {
+      beatStartTime = performance.now();
+      currentBeatIndex = 0;
+      beatInputHandled = false;
+      ringProgress = 0;
+      updateCompressControls();
+      canvas.focus({ preventScroll: true });
+    }
+
+    function getExpectedBeatTime(beatIndex) {
+      return beatStartTime + beatIndex * BEAT_INTERVAL;
+    }
+
+    function evaluateInput(inputTime) {
+      const expected = getExpectedBeatTime(currentBeatIndex);
+      const delta = Math.abs(inputTime - expected);
+
+      let tier;
+      if (delta <= PERFECT_WINDOW) tier = 'PERFECT';
+      else if (delta <= GOOD_WINDOW) tier = 'GOOD';
+      else tier = 'MISS';
+
+      applyHitResult(tier);
+      beatInputHandled = true;
+    }
+
+    function applyHitResult(tier) {
+      const now = performance.now();
+
+      if (tier === 'PERFECT') {
+        perfectCompressions++;
+        oxygen = 100; // perfect hit restores / maintains full oxygen
+        streak++;
+
+        const pts = getPerfectPoints();
+        if (streak >= STREAK_MULTIPLIER_AT) streakMultiplierPerfects++;
+        compressionPoints += pts;
+
+        lastHitFeedback = {
+          text: streak >= STREAK_MULTIPLIER_AT ? 'PERFECT! 2x' : 'PERFECT!',
+          color: '#4ecca3',
+          time: now
+        };
+
+        if (streak === STREAK_MULTIPLIER_AT) {
+          lastHitFeedback = { text: '2x STREAK MULTIPLIER!', color: '#f5c518', time: now };
+        }
+
+        playTone(660, 0.1, 'square', 0.08);
+      }
+
+      if (tier === 'GOOD') {
+        goodCompressions++;
+        oxygen = Math.min(100, oxygen + 4);
+        streak = 0;
+        lastHitFeedback = { text: 'GOOD', color: '#f5c518', time: now };
+        playTone(440, 0.08, 'triangle', 0.06);
+      }
+
+      if (tier === 'MISS') {
+        misses++;
+        oxygen = Math.max(0, oxygen - 15);
+        streak = 0;
+        lastHitFeedback = { text: 'MISS', color: '#ff4444', time: now };
+        playTone(110, 0.14, 'sawtooth', 0.07);
+      }
+
+      if (oxygen <= 0 && state === STATE.PLAYING) {
+        triggerTrivia();
+      }
+    }
+
+    function checkMissedBeats(now) {
+      if (state !== STATE.PLAYING) return;
+
+      const expected = getExpectedBeatTime(currentBeatIndex);
+      const deadline = expected + GOOD_WINDOW;
+
+      // If player never tapped before deadline, auto-count as MISS
+      if (!beatInputHandled && now > deadline) {
+        applyHitResult('MISS');
+        beatInputHandled = true;
+      }
+
+      // Move to next beat when its time arrives
+      const nextBeatTime = getExpectedBeatTime(currentBeatIndex + 1);
+      if (now >= nextBeatTime) {
+        currentBeatIndex++;
+        beatInputHandled = false;
+        beatPulse = 1;
+        playTone(220, 0.05, 'square', 0.04);
+      }
+
+      const beatTime = getExpectedBeatTime(currentBeatIndex);
+      const elapsed = now - beatTime;
+      ringProgress = Math.min(1, elapsed / BEAT_INTERVAL);
+      beatPulse = Math.max(0, beatPulse - 0.08);
+    }
+
+    // --- TRIVIA SAFETY NET ---
+    function triggerTrivia() {
+      lives--;
+
+      if (lives <= 0) {
+        setState(STATE.GAME_OVER);
+        return;
+      }
+
+      setState(STATE.TRIVIA);
+    }
+
+    function getRandomTriviaIndex() {
+      const available = TRIVIA_BANK
+        .map((_, i) => i)
+        .filter(i => !usedTriviaIndices.includes(i));
+
+      if (available.length === 0) {
+        usedTriviaIndices = [];
+        return Math.floor(Math.random() * TRIVIA_BANK.length);
+      }
+
+      const pick = available[Math.floor(Math.random() * available.length)];
+      usedTriviaIndices.push(pick);
+      return pick;
+    }
+
+    function clearTriviaFeedback() {
+      triviaFeedback.className = '';
+      triviaFeedback.innerHTML = '';
+      triviaOverlay.classList.remove('flash-correct', 'flash-wrong');
+    }
+
+    function playTriviaCorrectSound() {
+      playTone(523, 0.12, 'square', 0.09);
+      setTimeout(() => playTone(784, 0.15, 'square', 0.09), 120);
+    }
+
+    function playTriviaWrongSound() {
+      playTone(180, 0.2, 'sawtooth', 0.09);
+      setTimeout(() => playTone(120, 0.25, 'sawtooth', 0.08), 150);
+    }
+
+    function showTriviaQuestion() {
+      triviaAnimating = false;
+      clearTriviaFeedback();
+
+      currentTriviaIndex = getRandomTriviaIndex();
+      const q = TRIVIA_BANK[currentTriviaIndex];
+
+      triviaQuestion.textContent = q.question;
+      triviaLives.innerHTML = formatLivesHtml();
+      triviaOptions.innerHTML = '';
+
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'retro-btn secondary';
+        btn.textContent = option;
+        btn.addEventListener('click', () => handleTriviaAnswer(index, btn));
+        triviaOptions.appendChild(btn);
+      });
+    }
+
+    function showTriviaResultAnimation(isCorrect, onComplete) {
+      triviaAnimating = true;
+      clearTriviaFeedback();
+
+      triviaFeedback.innerHTML = isCorrect
+        ? '<span class="feedback-icon">✓</span><span>CORRECT! Patient revived!</span>'
+        : '<span class="feedback-icon">✗</span><span>WRONG! Life lost!</span>';
+
+      triviaFeedback.className = isCorrect ? 'show-correct' : 'show-wrong';
+      triviaOverlay.classList.add(isCorrect ? 'flash-correct' : 'flash-wrong');
+
+      if (isCorrect) playTriviaCorrectSound();
+      else playTriviaWrongSound();
+
+      setTimeout(() => {
+        triviaAnimating = false;
+        onComplete();
+      }, isCorrect ? 1400 : 1600);
+    }
+
+    function handleTriviaAnswer(selectedIndex, clickedBtn) {
+      if (triviaAnimating) return;
+
+      const q = TRIVIA_BANK[currentTriviaIndex];
+      const isCorrect = selectedIndex === q.correct;
+      const buttons = triviaOptions.querySelectorAll('button');
+
+      buttons.forEach(btn => { btn.disabled = true; });
+
+      if (isCorrect) {
+        clickedBtn.classList.add('trivia-btn-correct');
+        showTriviaResultAnimation(true, () => {
+          correctTrivia++;
+          oxygen = 80;
+          if (window.CoachPulse) CoachPulse.notifyTriviaResult(true);
+          hideAllOverlays();
+          state = STATE.PLAYING;
+          initPlaying();
+        });
+        return;
+      }
+
+      clickedBtn.classList.add('trivia-btn-wrong');
+      buttons[q.correct].classList.add('trivia-btn-reveal');
+
+      showTriviaResultAnimation(false, () => {
+        lives--;
+        if (window.CoachPulse) CoachPulse.notifyTriviaResult(false);
+        if (lives <= 0) {
+          setState(STATE.GAME_OVER);
+        } else {
+          showTriviaQuestion();
+        }
+      });
+    }
+
+    // --- END GAME + SCORE SUBMISSION ---
+    async function endGame(didWin) {
+      const timeBonus = didWin ? Math.floor(remainingMs / 1000) : 0;
+      const finalScore = calculateFinalScore(timeBonus);
+
+      const analytics = {
+        perfectCompressions,
+        goodCompressions,
+        misses,
+        correctTrivia,
+        timeBonus,
+        streakMultiplierPerfects
+      };
+
+      try {
+        await submitFinalScore(playerName, finalScore, analytics);
+        renderLeaderboard(await fetchGlobalLeaderboard());
+      } catch (err) {
+        console.error('Leaderboard save failed:', err);
+      }
+
+      scoreBreakdown.innerHTML = `
+        <p>HERO: ${escapeHtml(playerName)}</p>
+        <p>FINAL SCORE: ${finalScore}</p>
+        <p>Perfect: ${perfectCompressions}</p>
+        <p>Good: ${goodCompressions}</p>
+        <p>Misses: ${misses}</p>
+        <p>Trivia Saves: ${correctTrivia} (x50)</p>
+        <p>2x Multiplier Perfects: ${streakMultiplierPerfects}</p>
+        <p>Time Bonus: ${timeBonus}s (x5)</p>
+        <p>${didWin ? 'STATUS: RESCUED!' : 'STATUS: GAME OVER'}</p>
+      `;
+
+      setState(STATE.RESULTS);
+    }
+
+    // --- INPUT: SPACEBAR (PC) + TAP (MOBILE) + COMPRESS BUTTON ---
+    function handleCompress() {
+      if (state !== STATE.PLAYING) return;
+      initAudio();
+      evaluateInput(performance.now());
+    }
+
+    function handleGameplayKey(e) {
+      if (state !== STATE.PLAYING) return false;
+      if (e.code !== 'Space' && e.code !== 'Enter') return false;
+      if (e.repeat) return false;
+
+      e.preventDefault();
+      handleCompress();
+      return true;
+    }
+
+    // Capture phase: space works for CPR even when chat input was focused
+    window.addEventListener('keydown', (e) => {
+      if (handleGameplayKey(e)) return;
+
+      // Outside gameplay, allow normal space typing in text fields
+      if (e.code === 'Space' && isTypingInTextField()) return;
+    }, true);
+
+    compressBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleCompress();
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      handleCompress();
+    }, { passive: false });
+
+    canvas.addEventListener('click', () => {
+      if (isTouchDevice) return;
+      handleCompress();
+    });
+
+    // --- BUTTON EVENTS ---
+    startBtn.addEventListener('click', async () => {
+      const name = playerNameInput.value.trim();
+      if (!name) {
+        playerNameInput.focus();
+        return;
+      }
+
+      playerName = name;
+      initAudio();
+      resetGame();
+      renderLeaderboard(await fetchGlobalLeaderboard());
+      setState(STATE.NARRATIVE);
+    });
+
+    narrativeBtn.addEventListener('click', advanceNarrative);
+    call911Btn.addEventListener('click', () => setState(STATE.PLAYING));
+
+    retryBtn.addEventListener('click', async () => {
+      resetGame();
+      playerNameInput.value = playerName;
+      renderLeaderboard(await fetchGlobalLeaderboard());
+      setState(STATE.START);
+    });
+
+    // --- DRAWING HELPERS (Canvas rendering) ---
+    function drawPixelHeart(cx, cy, size, color) {
+      const px = size / 7;
+      const pixels = [
+        [0,1,1,0,1,1,0],
+        [1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,0],
+        [0,0,1,1,1,0,0],
+        [0,0,0,1,0,0,0]
+      ];
+
+      ctx.fillStyle = color;
+      pixels.forEach((row, r) => {
+        row.forEach((col, c) => {
+          if (col) ctx.fillRect(cx - 3.5 * px + c * px, cy - 3 * px + r * px, px, px);
+        });
+      });
+    }
+
+    function drawOxygenBar() {
+      const x = 40, y = 28, w = CW - 80, h = 18;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(x, y, w, h);
+
+      const fillW = (oxygen / 100) * w;
+      const color = oxygen > 60 ? '#4ecca3' : oxygen > 30 ? '#f5c518' : '#ff4444';
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, fillW, h);
+
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '10px "Press Start 2P"';
+      ctx.textAlign = 'left';
+      ctx.fillText(`OXYGEN: ${Math.round(oxygen)}%`, x, y - 8);
+    }
+
+    function formatLivesHtml() {
+      let html = '';
+      for (let i = 0; i < MAX_LIVES; i++) {
+        html += i < lives
+          ? '<span>♥</span>'
+          : '<span class="life-lost">♡</span>';
+      }
+      return html;
+    }
+
+    function drawLivesOnCanvas(x, y) {
+      ctx.textAlign = 'left';
+      ctx.font = '8px "Press Start 2P"';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('LIVES', x, y);
+
+      const heartY = y + 30;
+      const heartSize = 26;
+      const spacing = 32;
+
+      for (let i = 0; i < MAX_LIVES; i++) {
+        const hx = x + i * spacing;
+        const filled = i < lives;
+        drawLifeHeart(hx, heartY, heartSize, filled);
+      }
+    }
+
+    function drawLifeHeart(cx, cy, size, filled) {
+      const color = filled ? '#ff0000' : '#442222';
+      const px = size / 7;
+      const pixels = [
+        [0,1,1,0,1,1,0],
+        [1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,0],
+        [0,0,1,1,1,0,0],
+        [0,0,0,1,0,0,0]
+      ];
+
+      ctx.fillStyle = color;
+      pixels.forEach((row, r) => {
+        row.forEach((col, c) => {
+          if (col) ctx.fillRect(cx + c * px, cy + r * px, px, px);
+        });
+      });
+
+      if (!filled) {
+        ctx.strokeStyle = '#aa3333';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cx, cy, 7 * px, 6 * px);
+      }
+    }
+
+    function drawTimerAndLives() {
+      const secs = Math.ceil(remainingMs / 1000);
+      const mins = Math.floor(secs / 60);
+      const s = secs % 60;
+
+      ctx.fillStyle = secs <= 10 ? '#ff4444' : '#fff';
+      ctx.font = '12px "Press Start 2P"';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${mins}:${String(s).padStart(2, '0')}`, CW - 40, 48);
+
+      drawLivesOnCanvas(36, 52);
+    }
+
+    function drawTimingRing() {
+      const radius = RING_MAX_RADIUS - ringProgress * (RING_MAX_RADIUS - RING_TARGET_RADIUS);
+
+      // Static target zone ring
+      ctx.beginPath();
+      ctx.arc(CENTER_X, CENTER_Y, RING_TARGET_RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(78, 204, 163, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Shrinking beat ring
+      ctx.beginPath();
+      ctx.arc(CENTER_X, CENTER_Y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = beatPulse > 0 ? '#ffffff' : '#e94560';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      drawPixelHeart(CENTER_X, CENTER_Y, 48, '#e94560');
+
+      if (beatPulse > 0) {
+        ctx.beginPath();
+        ctx.arc(CENTER_X, CENTER_Y, RING_TARGET_RADIUS + 8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${beatPulse * 0.25})`;
+        ctx.fill();
+      }
+    }
+
+    function drawHUD() {
+      drawOxygenBar();
+      drawTimerAndLives();
+
+      ctx.textAlign = 'center';
+      ctx.font = '8px "Press Start 2P"';
+      ctx.fillStyle = streak >= STREAK_MULTIPLIER_AT ? '#f5c518' : '#888';
+      ctx.fillText(`STREAK: ${streak}`, CENTER_X, CH - 72);
+
+      ctx.fillStyle = '#888';
+      ctx.fillText(`SCORE: ${compressionPoints + correctTrivia * 50}`, CENTER_X, CH - 52);
+
+      ctx.fillStyle = '#f5c518';
+      ctx.fillText(isTouchDevice ? 'TAP TO COMPRESS' : 'SPACEBAR TO COMPRESS', CENTER_X, CH - 28);
+      ctx.fillText(`${BPM} BPM`, CENTER_X, CH - 92);
+    }
+
+    function drawHitFeedback(now) {
+      if (!lastHitFeedback.text) return;
+      const age = now - lastHitFeedback.time;
+      if (age > 600) return;
+
+      ctx.globalAlpha = 1 - age / 600;
+      ctx.fillStyle = lastHitFeedback.color;
+      ctx.font = '14px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.fillText(lastHitFeedback.text, CENTER_X, CENTER_Y - 95);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawNarrativeScene() {
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, CW, CH * 0.55);
+      ctx.fillStyle = '#555';
+      ctx.fillRect(0, CH * 0.55, CW, CH * 0.45);
+
+      ctx.fillStyle = '#3a3a5c';
+      ctx.fillRect(60, 110, 110, 220);
+      ctx.fillRect(220, 70, 100, 260);
+      ctx.fillRect(520, 90, 130, 240);
+
+      ctx.fillStyle = '#4ecca3';
+      ctx.fillRect(130, CH * 0.55 - 48, 20, 38);
+      ctx.fillStyle = '#ffccaa';
+      ctx.fillRect(135, CH * 0.55 - 62, 14, 14);
+
+      ctx.fillStyle = '#888';
+      ctx.fillRect(430, CH * 0.55 - 8, 50, 14);
+      ctx.fillStyle = '#ffccaa';
+      ctx.fillRect(468, CH * 0.55 - 16, 14, 12);
+
+      ctx.fillStyle = '#ff4444';
+      ctx.font = '18px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', 475, CH * 0.55 - 26);
+    }
+
+    function drawPlayingScene(now) {
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, CW, CH);
+
+      ctx.fillStyle = '#2a2a4e';
+      ctx.fillRect(0, CH * 0.72, CW, CH * 0.28);
+
+      drawTimingRing();
+      drawHUD();
+      drawHitFeedback(now);
+    }
+
+    function drawWinAnimation(now) {
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, CW, CH);
+
+      const elapsed = now - winAnimStart;
+      const progress = Math.min(1, elapsed / 2000);
+      const ambX = -200 + progress * (CW / 2 + 120);
+
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(ambX, CH * 0.62, 180, 56);
+      ctx.fillStyle = '#cc0000';
+      ctx.fillRect(ambX + 10, CH * 0.62 + 10, 160, 18);
+
+      ctx.fillStyle = '#4ecca3';
+      ctx.font = '10px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.fillText('SAVED!', CENTER_X, CH * 0.35);
+
+      drawPixelHeart(CENTER_X, CENTER_Y, 56, '#4ecca3');
+    }
+
+    function render(now) {
+      ctx.clearRect(0, 0, CW, CH);
+
+      if (state === STATE.NARRATIVE) drawNarrativeScene();
+      else if (state === STATE.PLAYING) drawPlayingScene(now);
+      else if (state === STATE.WIN) drawWinAnimation(now);
+      else {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, CW, CH);
+        drawPixelHeart(CENTER_X, CENTER_Y, 70, '#e94560');
+      }
+    }
+
+    // --- MAIN GAME LOOP (runs ~60 times per second) ---
+    let lastFrame = 0;
+
+    function gameLoop(timestamp) {
+      const dt = timestamp - lastFrame;
+      lastFrame = timestamp;
+
+      if (state === STATE.PLAYING) {
+        remainingMs -= dt;
+
+        if (remainingMs <= 0) {
+          remainingMs = 0;
+          setState(STATE.WIN);
+        } else {
+          checkMissedBeats(timestamp);
+        }
+      }
+
+      render(timestamp);
+      requestAnimationFrame(gameLoop);
+    }
+
+    // --- BOOTSTRAP: start the engine when page loads ---
+    fetchGlobalLeaderboard().then(renderLeaderboard).catch(() => {
+      leaderboardList.innerHTML = '<li><span>Leaderboard loads when server is running</span><span></span></li>';
+    });
+    requestAnimationFrame(gameLoop);
+
+    // ============================================================
+    // COACH PULSE — AI Training Assistant (side panel)
+    // Uses a built-in medical knowledge base + game context tips.
+    // Phase 2 can connect this to a real AI API later.
+    // ============================================================
+    const CoachPulse = (function () {
+      const chatEl = document.getElementById('assistant-chat');
+      const typingEl = document.getElementById('assistant-typing');
+      const inputEl = document.getElementById('assistant-input');
+      const sendBtn = document.getElementById('assistant-send');
+      const topicBtns = document.querySelectorAll('.topic-chip');
+
+      let tutorialStarted = false;
+      let lastContextMessage = '';
+
+      const TOPIC_ANSWERS = {
+        tutorial: 'TUTORIAL: 1) Enter your hero name. 2) Read the street story and tap CALL 911. 3) Press Spacebar (PC) or tap the screen (mobile) when the shrinking ring hits the green target. 4) Keep oxygen up for 2 minutes to win! 5) If oxygen hits 0%, answer a first-aid trivia question to revive.',
+        cpr: 'CPR pushes blood and oxygen through the body when the heart stops. Push hard and fast in the center of the chest at 100–120 BPM — about the beat of "Stayin\' Alive". In this game we use 110 BPM. Call emergency services FIRST, then start compressions.',
+        game: 'HOW TO PLAY: Match the shrinking ring at 110 BPM. PERFECT (±65ms) = full oxygen + 10 pts. GOOD (±130ms) = small oxygen boost. MISS = oxygen drops. You have 3 red hearts (lives). Win by surviving 2:00 until the ambulance arrives!',
+        firstaid: 'FIRST AID BASICS: Always check if the scene is safe. See if the person responds. Call emergency services (911, 112, or 119). Small cuts: clean and bandage. Burns: cool with running water. Choking: get adult help immediately. Neck injury: keep them still.',
+        emergency: 'In an emergency, call your local emergency number right away — 911 (USA), 112 (Europe), or 119 (Japan/Korea). Tell them where you are and what happened. Stay on the line. Only start CPR after checking safety and calling for help.'
+      };
+
+      const KNOWLEDGE = [
+        { keys: ['hello', 'hi', 'hey', 'start'], answer: 'Hi! I\'m Coach Pulse. I\'ll teach you CPR, first aid, and how to play CPR HERO. Tap a topic button or ask me anything!' },
+        { keys: ['cpr', 'compression', 'compress', 'chest', 'hands'], answer: TOPIC_ANSWERS.cpr + ' Place hands on the center of the chest, lower half of the sternum.' },
+        { keys: ['bpm', 'rhythm', 'beat', 'stayin', 'alive', '110', 'speed'], answer: 'The ideal CPR rhythm is 100–120 BPM. This game uses 110 BPM (~545ms per beat). Many trainers use the song "Stayin\' Alive" to remember the pace!' },
+        { keys: ['911', '112', '119', 'emergency', 'call', 'phone'], answer: TOPIC_ANSWERS.emergency },
+        { keys: ['oxygen', 'bar', 'health'], answer: 'The OXYGEN bar shows how well the patient is doing. Perfect compressions keep it full. If it hits 0%, the game pauses for a trivia question. Answer correctly to revive at 80% oxygen!' },
+        { keys: ['life', 'lives', 'heart', 'die'], answer: 'You start with 3 red hearts. When oxygen hits 0%, you lose 1 heart and get a trivia question. Wrong trivia answers cost another heart. Lose all 3 and it\'s Game Over.' },
+        { keys: ['trivia', 'quiz', 'question'], answer: 'Trivia teaches real first-aid facts. Read carefully! A correct answer revives the patient. A wrong answer costs a life and shows a new question.' },
+        { keys: ['win', 'ambulance', 'timer', '2:00', '120'], answer: 'You WIN when the 2-minute timer hits 0:00 — the ambulance arrives! Keep oxygen up by hitting the rhythm. Time remaining adds bonus points.' },
+        { keys: ['lose', 'game over'], answer: 'You LOSE if all 3 hearts are gone. Don\'t give up — press TRY AGAIN and practice the 110 BPM rhythm!' },
+        { keys: ['score', 'points', 'leaderboard'], answer: 'Score = compression points + (trivia correct × 50) + (seconds left × 5). Get 10 perfect hits in a row for a 2× multiplier on perfect compressions!' },
+        { keys: ['spacebar', 'tap', 'control', 'keyboard', 'mobile'], answer: 'On PC: press SPACEBAR when the ring hits the target. On mobile: TAP the game canvas. Don\'t tap too early or too late — watch the shrinking ring!' },
+        { keys: ['unconscious', 'respond', 'wake'], answer: 'If someone is unconscious, check if they respond by tapping shoulders and shouting. If no response, call emergency services and begin CPR if trained.' },
+        { keys: ['bleed', 'cut', 'bandage', 'blood'], answer: 'For a small cut: clean the wound and cover it with a clean bandage. Apply gentle pressure if bleeding continues. Get help for serious bleeding.' },
+        { keys: ['burn', 'fire', 'hot'], answer: 'For burns: cool the area with running water for at least 10 minutes. Do NOT put ice directly on skin. Cover loosely and seek medical help for serious burns.' },
+        { keys: ['choke', 'choking'], answer: 'If someone is choking and cannot speak, they need help immediately. Shout for an adult, call emergency services, and learn the Heimlich maneuver from a certified trainer.' },
+        { keys: ['neck', 'spine', 'move'], answer: 'If someone may have a neck injury, do NOT move them unless they are in immediate danger. Keep them still and call emergency services.' },
+        { keys: ['safe', 'safety', 'scene'], answer: 'Before helping anyone, check that the area is safe for YOU. You cannot help if you get hurt too. Look for traffic, fire, or other dangers first.' },
+        { keys: ['play', 'how', 'tutorial', 'game'], answer: TOPIC_ANSWERS.game },
+        { keys: ['what', 'teach', 'learn'], answer: 'I can teach CPR rhythm, calling emergency services, first-aid trivia, and how to beat CPR HERO. Try asking "What is CPR?" or tap CPR Basics!' }
+      ];
+
+      const STATE_TIPS = {
+        START: 'Enter your hero name and press START MISSION. I\'ll stay here to help you the whole game!',
+        NARRATIVE: 'Read each story beat. When you see TAP TO CALL 911, press it — that starts the 2-minute rescue timer!',
+        PLAYING: 'Focus on the shrinking ring! Hit Spacebar or tap when it matches the green circle. Keep that 110 BPM rhythm steady!',
+        TRIVIA: 'Take your time reading the question. Pick the safest, most correct first-aid answer. You can ask me for hints!',
+        WIN: 'Amazing work! You kept the patient alive until the ambulance came. Real CPR heroes stay calm and keep going!',
+        GAME_OVER: 'Don\'t worry — every expert was once a beginner. Try again and focus on the beat. Ask me about CPR rhythm!',
+        RESULTS: 'Check your mission report! High scores reward perfect rhythm, trivia knowledge, and time remaining.'
+      };
+
+      const TUTORIAL_SCRIPT = [
+        'Hi! I\'m Coach Pulse, your CPR training partner.',
+        'Welcome to CPR HERO! I\'ll stay on this side panel through your entire mission.',
+        'This game teaches real CPR rhythm: 110 beats per minute — like the song "Stayin\' Alive".',
+        'Before you play: enter your name on the start screen, then click START MISSION.',
+        'In the story, you\'ll find someone unconscious. Always CALL 911 (or your local emergency number) first!',
+        'During CPR: press SPACEBAR (PC) or TAP the screen (mobile) when the ring hits the target zone.',
+        'Keep the oxygen bar up for 2 minutes until the ambulance arrives. You can ask me anything anytime!'
+      ];
+
+      function scrollChat() {
+        chatEl.scrollTop = chatEl.scrollHeight;
+      }
+
+      function addMessage(text, type = 'bot') {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-msg ${type}`;
+        bubble.textContent = text;
+        chatEl.appendChild(bubble);
+        scrollChat();
+      }
+
+      function showTyping(show) {
+        typingEl.classList.toggle('active', show);
+        if (show) scrollChat();
+      }
+
+      function reply(text, delay = 500) {
+        return new Promise((resolve) => {
+          showTyping(true);
+          setTimeout(() => {
+            showTyping(false);
+            addMessage(text, 'bot');
+            resolve();
+          }, delay);
+        });
+      }
+
+      function findAnswer(question) {
+        const q = question.toLowerCase().trim();
+        if (!q) return 'Type a question and I\'ll do my best to help! Try "What is CPR?" or tap a topic button above.';
+
+        let best = null;
+        let bestScore = 0;
+
+        KNOWLEDGE.forEach((entry) => {
+          let score = 0;
+          entry.keys.forEach((key) => {
+            if (q.includes(key)) score += key.length;
+          });
+          if (score > bestScore) {
+            bestScore = score;
+            best = entry;
+          }
+        });
+
+        if (best && bestScore > 0) return best.answer;
+        return 'I\'m not sure about that one yet. Try asking about CPR rhythm, calling 911, the oxygen bar, lives, scoring, or tap CPR Basics / First Aid above!';
+      }
+
+      async function handleUserMessage(text) {
+        const trimmed = text.trim();
+        if (!trimmed) return;
+
+        addMessage(trimmed, 'user');
+        inputEl.value = '';
+        const answer = findAnswer(trimmed);
+        await reply(answer, 600 + Math.random() * 400);
+      }
+
+      async function runTutorial() {
+        if (tutorialStarted) return;
+        tutorialStarted = true;
+
+        for (let i = 0; i < TUTORIAL_SCRIPT.length; i++) {
+          await reply(TUTORIAL_SCRIPT[i], i === 0 ? 400 : 900);
+        }
+      }
+
+      function onGameState(newState) {
+        const tip = STATE_TIPS[newState];
+        if (!tip || tip === lastContextMessage) return;
+        lastContextMessage = tip;
+        reply(tip, 700);
+      }
+
+      function onNarrativeStep(step) {
+        const hints = [
+          '',
+          'Someone collapsed! In real life, check if they respond and shout for help.',
+          'They are not responding — this is an emergency. Stay calm.',
+          'Remember: safety first, then call emergency services, then CPR.',
+          'Next step: tap CALL 911 to start the timer. Compressions come right after!'
+        ];
+        if (hints[step]) reply(hints[step], 500);
+      }
+
+      function notifyTriviaResult(isCorrect) {
+        if (isCorrect) {
+          reply('Great job! Correct answers show you\'re learning real first-aid skills. Back to compressions — keep the rhythm!', 400);
+        } else {
+          reply('That one was tricky. The green highlighted button was the correct answer. Review first-aid basics and try again!', 400);
+        }
+      }
+
+      sendBtn.addEventListener('click', () => handleUserMessage(inputEl.value));
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleUserMessage(inputEl.value);
+        }
+      });
+
+      topicBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const topic = btn.dataset.topic;
+          const label = btn.textContent;
+          addMessage(label, 'user');
+          reply(TOPIC_ANSWERS[topic] || TOPIC_ANSWERS.tutorial, 500);
+        });
+      });
+
+      // Greeting + tutorial when page loads
+      setTimeout(runTutorial, 600);
+
+      return { onGameState, onNarrativeStep, notifyTriviaResult, reply, addMessage };
+    })();
+
+    window.CoachPulse = CoachPulse;
+  </script>
+</body>
+</html>
