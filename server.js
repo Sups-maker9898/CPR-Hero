@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const os = require('os');
 const sqlite3 = require('sqlite3').verbose(); // 1. Import the database library
 
 const app = express();
@@ -10,11 +11,9 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend files automatically from your 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 2. Establish connection to your SQLite Database File
-// This will automatically create 'leaderboard.db' in your sidebar if it doesn't exist!
 const db = new sqlite3.Database('./leaderboard.db', (err) => {
     if (err) {
         console.error("❌ Database connection error:", err.message);
@@ -69,7 +68,30 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`\n🚀 CPR HERO server running smoothly at http://localhost:${PORT}`);
+function lanAddresses() {
+    const nets = os.networkInterfaces();
+    const addresses = [];
+    Object.values(nets).forEach((ifaces) => {
+        (ifaces || []).forEach((iface) => {
+            if ((iface.family === 'IPv4' || iface.family === 4) && !iface.internal) {
+                addresses.push(iface.address);
+            }
+        });
+    });
+    return addresses;
+}
+
+// Listen on all interfaces so a phone on the same Wi-Fi can open the game
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🚀 CPR HERO is running`);
+    console.log(`   Laptop:  http://localhost:${PORT}`);
+    const ips = lanAddresses();
+    if (ips.length) {
+        ips.forEach((ip) => {
+            console.log(`   Phone:   http://${ip}:${PORT}`);
+        });
+        console.log(`   Same Wi-Fi required. On iPhone/Android, open that Phone URL, then Add to Home Screen.`);
+    } else {
+        console.log(`   No LAN address found. Connect this PC to Wi-Fi, then restart the server for phone access.`);
+    }
 });

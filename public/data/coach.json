@@ -1,0 +1,59 @@
+{
+  "topics": {
+    "tutorial": "TUTORIAL: 1) Enter your hero name. 2) Read the street story and tap CALL 911. 3) Press Spacebar (PC) or tap the screen (mobile) when the shrinking ring hits the green target. 4) Keep oxygen up for 2 minutes to win! 5) If oxygen hits 0%, answer a first-aid trivia question to revive.",
+    "cpr": "CPR pushes blood and oxygen through the body when the heart stops. Push hard and fast in the center of the chest at 100–120 BPM — about the beat of \"Stayin' Alive\". In this game we use 110 BPM. Call emergency services FIRST, then start compressions.",
+    "game": "HOW TO PLAY: Match the shrinking ring at 110 BPM. PERFECT (±65ms) = full oxygen + 10 pts. GOOD (±130ms) = small oxygen boost. MISS = oxygen drops. You have 3 red hearts (lives). Win by surviving 2:00 until the ambulance arrives!",
+    "firstaid": "FIRST AID BASICS: Always check if the scene is safe. See if the person responds. Call emergency services (911, 112, or 119). Small cuts: clean and bandage. Burns: cool with running water. Choking: get adult help immediately. Neck injury: keep them still.",
+    "emergency": "In an emergency, call your local emergency number right away — 911 (USA), 112 (Europe), or 119 (Japan/Korea). Tell them where you are and what happened. Stay on the line. Only start CPR after checking safety and calling for help."
+  },
+  "knowledge": [
+    { "keys": ["hello", "hi", "hey", "start"], "answer": "Hi! I'm Coach Pulse. I'll teach you CPR, first aid, and how to play CPR HERO. Tap a topic button or ask me anything!" },
+    { "keys": ["cpr", "compression", "compress", "chest", "hands"], "answerKey": "cpr", "extra": " Place hands on the center of the chest, lower half of the sternum." },
+    { "keys": ["bpm", "rhythm", "beat", "stayin", "alive", "110", "speed"], "answer": "The ideal CPR rhythm is 100–120 BPM. This game uses 110 BPM (~545ms per beat). Many trainers use the song \"Stayin' Alive\" to remember the pace!" },
+    { "keys": ["911", "112", "119", "emergency", "call", "phone"], "answerKey": "emergency" },
+    { "keys": ["oxygen", "bar", "health"], "answer": "The OXYGEN bar shows how well the patient is doing. Perfect compressions keep it full. If it hits 0%, the game pauses for a trivia question. Answer correctly to revive at 80% oxygen!" },
+    { "keys": ["life", "lives", "heart", "die"], "answer": "You start with 3 red hearts. When oxygen hits 0%, you lose 1 heart and get a trivia question. Wrong trivia answers cost another heart. Lose all 3 and it's Game Over." },
+    { "keys": ["trivia", "quiz", "question"], "answer": "Trivia teaches real first-aid facts. Read carefully! A correct answer revives the patient. A wrong answer costs a life and shows a new question." },
+    { "keys": ["win", "ambulance", "timer", "2:00", "120"], "answer": "You WIN when the 2-minute timer hits 0:00 — the ambulance arrives! Keep oxygen up by hitting the rhythm. Time remaining adds bonus points." },
+    { "keys": ["lose", "game over"], "answer": "You LOSE if all 3 hearts are gone. Don't give up — press TRY AGAIN and practice the 110 BPM rhythm!" },
+    { "keys": ["score", "points", "leaderboard"], "answer": "Score = compression points + (trivia correct × 50) + (seconds left × 5). Get 10 perfect hits in a row for a 2× multiplier on perfect compressions!" },
+    { "keys": ["spacebar", "tap", "control", "keyboard", "mobile"], "answer": "On PC: press SPACEBAR when the ring hits the target. On mobile: TAP the game canvas. Don't tap too early or too late — watch the shrinking ring!" },
+    { "keys": ["unconscious", "respond", "wake"], "answer": "If someone is unconscious, check if they respond by tapping shoulders and shouting. If no response, call emergency services and begin CPR if trained." },
+    { "keys": ["bleed", "cut", "bandage", "blood"], "answer": "For a small cut: clean the wound and cover it with a clean bandage. Apply gentle pressure if bleeding continues. Get help for serious bleeding." },
+    { "keys": ["burn", "fire", "hot"], "answer": "For burns: cool the area with running water for at least 10 minutes. Do NOT put ice directly on skin. Cover loosely and seek medical help for serious burns." },
+    { "keys": ["choke", "choking"], "answer": "If someone is choking and cannot speak, they need help immediately. Shout for an adult, call emergency services, and learn the Heimlich maneuver from a certified trainer." },
+    { "keys": ["neck", "spine", "move"], "answer": "If someone may have a neck injury, do NOT move them unless they are in immediate danger. Keep them still and call emergency services." },
+    { "keys": ["safe", "safety", "scene"], "answer": "Before helping anyone, check that the area is safe for YOU. You cannot help if you get hurt too. Look for traffic, fire, or other dangers first." },
+    { "keys": ["play", "how", "tutorial", "game"], "answerKey": "game" },
+    { "keys": ["what", "teach", "learn"], "answer": "I can teach CPR rhythm, calling emergency services, first-aid trivia, and how to beat CPR HERO. Try asking \"What is CPR?\" or tap CPR Basics!" }
+  ],
+  "stateTips": {
+    "START": "Enter your hero name and press START MISSION. I'll stay here to help you the whole game!",
+    "NARRATIVE": "Read each story beat. When you see TAP TO CALL 911, press it — that starts the 2-minute rescue timer!",
+    "PLAYING": "Focus on the shrinking ring! Hit Spacebar or tap when it matches the green circle. Keep that 110 BPM rhythm steady!",
+    "TRIVIA": "Take your time reading the question. Pick the safest, most correct first-aid answer. You can ask me for hints!",
+    "WIN": "Amazing work! You kept the patient alive until the ambulance came. Real CPR heroes stay calm and keep going!",
+    "GAME_OVER": "Don't worry — every expert was once a beginner. Try again and focus on the beat. Ask me about CPR rhythm!",
+    "RESULTS": "Check your mission report! High scores reward perfect rhythm, trivia knowledge, and time remaining."
+  },
+  "tutorial": [
+    "Hi! I'm Coach Pulse, your CPR training partner.",
+    "Welcome to CPR HERO! I'll stay on this side panel through your entire mission.",
+    "This game teaches real CPR rhythm: 110 beats per minute — like the song \"Stayin' Alive\".",
+    "Before you play: enter your name on the start screen, then click START MISSION.",
+    "In the story, you'll find someone unconscious. Always CALL 911 (or your local emergency number) first!",
+    "During CPR: press SPACEBAR (PC) or TAP the screen (mobile) when the ring hits the target zone.",
+    "Keep the oxygen bar up for 2 minutes until the ambulance arrives. You can ask me anything anytime!"
+  ],
+  "narrativeHints": [
+    "",
+    "Someone collapsed! In real life, check if they respond and shout for help.",
+    "They are not responding — this is an emergency. Stay calm.",
+    "Remember: safety first, then call emergency services, then CPR.",
+    "Next step: tap CALL 911 to start the timer. Compressions come right after!"
+  ],
+  "triviaCorrect": "Great job! Correct answers show you're learning real first-aid skills. Back to compressions — keep the rhythm!",
+  "triviaWrong": "That one was tricky. The green highlighted button was the correct answer. Review first-aid basics and try again!",
+  "fallback": "I'm not sure about that one yet. Try asking about CPR rhythm, calling 911, the oxygen bar, lives, scoring, or tap CPR Basics / First Aid above!",
+  "emptyPrompt": "Type a question and I'll do my best to help! Try \"What is CPR?\" or tap a topic button above."
+}

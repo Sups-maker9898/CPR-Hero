@@ -12,8 +12,8 @@ An interactive, educational 2D retro arcade game that teaches the critical impor
 
 ## Tech Stack
 
-- **Backend:** Node.js + Express (in-memory leaderboard)
-- **Frontend:** HTML5 Canvas + vanilla JavaScript (single-file game engine)
+- **Backend:** Node.js + Express + SQLite leaderboard
+- **Frontend:** HTML + CSS + modular JavaScript + JSON content files
 
 ## Quick Start
 
@@ -23,6 +23,33 @@ npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project files
+
+| Path | Role |
+|------|------|
+| `public/index.html` | Page layout only (same look as before) |
+| `public/css/style.css` | All visual styling |
+| `public/js/game.js` | Game loop, screens, drawing, input |
+| `public/js/rhythm.js` | 110 BPM timing math |
+| `public/js/trivia.js` | Trivia question rotation |
+| `public/js/coach.js` | Coach Pulse assistant |
+| `public/js/leaderboard.js` | Score API calls |
+| `public/data/trivia.json` | Trivia questions |
+| `public/data/story.json` | Intro story text |
+| `public/data/coach.json` | Tutorial, tips, and first-aid answers |
+| `server.js` | Node.js + Express + SQLite (unchanged) |
+| `java/CoachServer.java` | Optional Java Coach service (answers Coach Pulse questions) |
+
+## Optional: Java Coach service
+
+Requires Java 11 or newer. No Maven or extra installs are needed. Run it in a second terminal from the project folder:
+
+```bash
+java java/CoachServer.java
+```
+
+It listens on port 8080 and reads `public/data/coach.json`. When it is running, typed Coach Pulse questions are answered by Java. When it is not running, the game uses its built-in answers, and nothing else changes.
 
 ## API Endpoints
 

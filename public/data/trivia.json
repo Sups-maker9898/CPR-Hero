@@ -1,0 +1,104 @@
+{
+  "questions": [
+    {
+      "question": "What should you do first if someone is unconscious?",
+      "options": [
+        "Run away",
+        "Check if they respond and call for help",
+        "Give them food",
+        "Pour water on them"
+      ],
+      "correct": 1
+    },
+    {
+      "question": "What phone number should you call in an emergency?",
+      "options": [
+        "Your friend's number",
+        "Pizza shop",
+        "Emergency services number (e.g., 119, 911, 112)",
+        "School number"
+      ],
+      "correct": 2
+    },
+    {
+      "question": "What does CPR help with?",
+      "options": [
+        "Making someone taller",
+        "Helping blood and oxygen move through the body",
+        "Making someone sleep",
+        "Fixing broken toys"
+      ],
+      "correct": 1
+    },
+    {
+      "question": "If someone is bleeding from a small cut, what should you do?",
+      "options": [
+        "Ignore it",
+        "Put dirt on it",
+        "Clean it and cover it with a bandage",
+        "Touch it with dirty hands"
+      ],
+      "correct": 2
+    },
+    {
+      "question": "If a person is choking and cannot speak, what should you do?",
+      "options": [
+        "Give them more food",
+        "Ask an adult or call for help immediately",
+        "Tell them to lie down and sleep",
+        "Leave them alone"
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Where should you place your hands during CPR?",
+      "options": [
+        "On the person's knee",
+        "On the center of the chest",
+        "On the forehead",
+        "On the foot"
+      ],
+      "correct": 1
+    },
+    {
+      "question": "If someone gets a burn from something hot, what should you do?",
+      "options": [
+        "Put ice directly on it",
+        "Cool it with running water",
+        "Cover it with mud",
+        "Scratch it"
+      ],
+      "correct": 1
+    },
+    {
+      "question": "Before helping someone, what should you check?",
+      "options": [
+        "If the area is safe",
+        "If they have toys",
+        "If they are wearing shoes",
+        "If they like sports"
+      ],
+      "correct": 0
+    },
+    {
+      "question": "If someone falls and may have hurt their neck, what should you do?",
+      "options": [
+        "Move them quickly",
+        "Tell them to run",
+        "Keep them still and call for help",
+        "Lift them onto your back"
+      ],
+      "correct": 2
+    },
+    {
+      "question": "What is the correct CPR rhythm often compared to?",
+      "options": [
+        "A slow turtle walk",
+        "The beat of the song \"Stayin' Alive\"",
+        "A sleeping cat",
+        "A whisper"
+      ],
+      "correct": 1
+    }
+  ]
+}

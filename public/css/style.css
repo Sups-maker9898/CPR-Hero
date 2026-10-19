@@ -1,0 +1,957 @@
+/* ==========================================================
+       PHASE 1: RETRO CSS STYLING
+       This section controls how everything LOOKS on screen.
+       The game drawing itself happens on the <canvas> below.
+    ========================================================== */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #1a1a2e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --text: #eaeaea;
+      --green: #4ecca3;
+      --yellow: #f5c518;
+      --red: #ff4444;
+    }
+
+    body {
+      font-family: 'Press Start 2P', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Side-by-side layout: game + AI assistant */
+    #app-layout {
+      display: flex;
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 10px 24px;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #main-column {
+      flex: 1 1 520px;
+      min-width: 0;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header, #leaderboard-panel, #game-container {
+      width: 100%;
+    }
+
+    /* Subtle CRT scanline effect for retro feel */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.07) 2px,
+        rgba(0, 0, 0, 0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    header {
+      text-align: center;
+      padding: 16px 12px 8px;
+      width: 100%;
+    }
+
+    header h1 {
+      font-size: clamp(14px, 4vw, 26px);
+      color: var(--accent);
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    header p {
+      font-size: clamp(6px, 1.5vw, 9px);
+      margin-top: 8px;
+      color: #888;
+      line-height: 1.8;
+    }
+
+    /* Wrapper holds canvas + overlay menus on top */
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 820px;
+      padding: 0 10px 24px;
+    }
+
+    #canvas-stage {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* The 800x600 game drawing surface (internal resolution stays fixed) */
+    #game-canvas {
+      display: block;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border: 4px solid var(--accent2);
+      box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+      image-rendering: pixelated;
+      cursor: pointer;
+      touch-action: none; /* prevents page scroll when tapping canvas on mobile */
+    }
+
+    /* Overlay panels sit ON TOP of the canvas for menus / trivia / results */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 26, 46, 0.93);
+      z-index: 10;
+      padding: 20px;
+      text-align: center;
+      gap: 14px;
+    }
+
+    .overlay.active { display: flex; }
+
+    .overlay h2 {
+      font-size: clamp(10px, 2.5vw, 16px);
+      color: var(--accent);
+      line-height: 1.6;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .overlay p, .overlay label {
+      font-size: clamp(6px, 1.4vw, 9px);
+      line-height: 2;
+      color: #ccc;
+    }
+
+    .retro-input {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(8px, 2vw, 11px);
+      padding: 12px 16px;
+      background: #0a0a1a;
+      border: 3px solid var(--accent2);
+      color: var(--text);
+      text-align: center;
+      width: min(300px, 90%);
+      outline: none;
+    }
+
+    .retro-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(233, 69, 96, 0.4);
+    }
+
+    .retro-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(7px, 1.7vw, 10px);
+      padding: 14px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: 3px solid #fff;
+      cursor: pointer;
+      min-height: 48px;
+      min-width: 48px;
+      transition: transform 0.1s;
+    }
+
+    .retro-btn:hover, .retro-btn:focus {
+      background: #ff6b81;
+      transform: scale(1.04);
+      outline: 2px solid var(--yellow);
+    }
+
+    .retro-btn.secondary {
+      background: var(--accent2);
+      border-color: var(--green);
+    }
+
+    .retro-btn.call911 {
+      background: #cc0000;
+      animation: pulse911 1s infinite;
+    }
+
+    @keyframes pulse911 {
+      0%, 100% { box-shadow: 0 0 8px #ff0000; }
+      50% { box-shadow: 0 0 28px #ff4444; }
+    }
+
+    #leaderboard-panel {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 12px;
+      border: 3px solid var(--accent2);
+      background: rgba(15, 52, 96, 0.45);
+      padding: 12px;
+    }
+
+    #leaderboard-panel h3 {
+      font-size: clamp(7px, 1.7vw, 9px);
+      color: var(--green);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    #leaderboard-list {
+      list-style: none;
+      font-size: clamp(5px, 1.2vw, 8px);
+      line-height: 2.2;
+    }
+
+    #leaderboard-list li {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 4px;
+    }
+
+    #trivia-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(520px, 95%);
+    }
+
+    #trivia-lives {
+      font-size: clamp(20px, 5vw, 32px);
+      color: #ff0000;
+      letter-spacing: 8px;
+      line-height: 1.4;
+      text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255, 0, 0, 0.5);
+      margin: 4px 0;
+    }
+
+    #trivia-lives .life-lost {
+      color: #663333;
+      text-shadow: none;
+    }
+
+    #trivia-options .retro-btn {
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.6;
+      text-align: left;
+      white-space: normal;
+    }
+
+    #trivia-options .retro-btn:disabled {
+      opacity: 0.85;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #trivia-options .trivia-btn-correct {
+      background: #1b6b42 !important;
+      border-color: var(--green) !important;
+      box-shadow: 0 0 16px rgba(78, 204, 163, 0.8);
+    }
+
+    #trivia-options .trivia-btn-wrong {
+      background: #6b1b1b !important;
+      border-color: var(--red) !important;
+      box-shadow: 0 0 16px rgba(255, 68, 68, 0.8);
+      animation: triviaBtnWrong 0.45s ease;
+    }
+
+    #trivia-options .trivia-btn-reveal {
+      border-color: var(--green) !important;
+      box-shadow: 0 0 12px rgba(78, 204, 163, 0.5);
+    }
+
+    #trivia-feedback {
+      font-size: clamp(10px, 2.5vw, 18px);
+      line-height: 1.6;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    #trivia-feedback.show-correct {
+      color: var(--green);
+      animation: triviaCorrectPop 0.7s ease forwards;
+    }
+
+    #trivia-feedback.show-wrong {
+      color: var(--red);
+      animation: triviaWrongPop 0.7s ease forwards;
+    }
+
+    #trivia-feedback .feedback-icon {
+      font-size: clamp(16px, 4vw, 28px);
+      display: inline-block;
+    }
+
+    #trivia-feedback.show-correct .feedback-icon {
+      animation: iconBounce 0.6s ease;
+    }
+
+    #trivia-feedback.show-wrong .feedback-icon {
+      animation: iconShake 0.5s ease;
+    }
+
+    #trivia-overlay.flash-correct {
+      animation: overlayFlashGreen 0.6s ease;
+    }
+
+    #trivia-overlay.flash-wrong {
+      animation: overlayFlashRed 0.6s ease;
+    }
+
+    @keyframes triviaCorrectPop {
+      0% { opacity: 0; transform: scale(0.4); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes triviaWrongPop {
+      0% { opacity: 0; transform: translateX(0) scale(0.8); }
+      20% { opacity: 1; transform: translateX(-8px) scale(1); }
+      40% { transform: translateX(8px) scale(1); }
+      60% { transform: translateX(-6px) scale(1); }
+      80% { transform: translateX(6px) scale(1); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes triviaBtnWrong {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-12px); }
+      60% { transform: translateY(-6px); }
+    }
+
+    @keyframes iconShake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-12deg); }
+      75% { transform: rotate(12deg); }
+    }
+
+    @keyframes overlayFlashGreen {
+      0%, 100% { background: rgba(26, 26, 46, 0.93); }
+      40% { background: rgba(30, 80, 50, 0.95); }
+    }
+
+    @keyframes overlayFlashRed {
+      0%, 100% { background: rgba(26, 26, 46, 0.93); }
+      40% { background: rgba(80, 20, 30, 0.95); }
+    }
+
+    #touch-hint {
+      display: none;
+      text-align: center;
+      font-size: clamp(6px, 1.3vw, 8px);
+      color: var(--yellow);
+      margin-top: 6px;
+    }
+
+    #compress-btn {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 10px auto 0;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(8px, 2vw, 11px);
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      border: 3px solid #fff;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 0 #8b1530;
+    }
+
+    #compress-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #8b1530;
+    }
+
+    #compress-btn.visible {
+      display: block;
+    }
+
+    #score-breakdown {
+      font-size: clamp(6px, 1.3vw, 8px);
+      line-height: 2.2;
+      color: var(--green);
+      text-align: left;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ==========================================================
+       AI ASSISTANT PANEL (Coach Pulse — always visible)
+    ========================================================== */
+    #ai-assistant {
+      flex: 0 0 300px;
+      width: 300px;
+      max-width: 100%;
+      min-height: 520px;
+      max-height: calc(100vh - 24px);
+      position: sticky;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid var(--green);
+      background: rgba(8, 12, 28, 0.97);
+      box-shadow: 0 0 24px rgba(78, 204, 163, 0.15);
+      z-index: 100;
+    }
+
+    .assistant-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 3px solid var(--accent2);
+      background: rgba(15, 52, 96, 0.6);
+    }
+
+    .assistant-avatar {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--green);
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      animation: avatarPulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(78, 204, 163, 0.3); }
+      50% { box-shadow: 0 0 14px rgba(78, 204, 163, 0.7); }
+    }
+
+    .assistant-title {
+      font-size: clamp(7px, 1.6vw, 9px);
+      color: var(--green);
+      line-height: 1.6;
+    }
+
+    .assistant-title span {
+      display: block;
+      color: #888;
+      font-size: clamp(5px, 1.2vw, 7px);
+      margin-top: 4px;
+    }
+
+    #assistant-chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 280px;
+    }
+
+    .chat-msg {
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.9;
+      padding: 10px;
+      border: 2px solid var(--accent2);
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    .chat-msg.bot {
+      background: rgba(15, 52, 96, 0.55);
+      border-color: var(--green);
+      color: #dceee6;
+      align-self: flex-start;
+    }
+
+    .chat-msg.user {
+      background: rgba(233, 69, 96, 0.2);
+      border-color: var(--accent);
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .chat-msg.tip {
+      border-color: var(--yellow);
+      background: rgba(245, 197, 24, 0.08);
+      color: var(--yellow);
+    }
+
+    .chat-typing {
+      font-size: clamp(5px, 1.2vw, 7px);
+      color: #888;
+      padding: 4px 10px;
+      display: none;
+    }
+
+    .chat-typing.active {
+      display: block;
+      animation: typingBlink 1s infinite;
+    }
+
+    @keyframes typingBlink {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    #assistant-quick-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 10px 0;
+    }
+
+    .topic-chip {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(4px, 1vw, 6px);
+      padding: 8px 8px;
+      background: var(--accent2);
+      color: var(--text);
+      border: 2px solid #335588;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+
+    .topic-chip:hover, .topic-chip:focus {
+      border-color: var(--green);
+      outline: none;
+    }
+
+    #assistant-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 3px solid var(--accent2);
+    }
+
+    #assistant-input {
+      flex: 1;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(5px, 1.2vw, 7px);
+      padding: 10px 8px;
+      background: #0a0a1a;
+      border: 2px solid var(--accent2);
+      color: var(--text);
+      outline: none;
+      min-width: 0;
+    }
+
+    #assistant-input:focus {
+      border-color: var(--green);
+    }
+
+    #assistant-send {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(5px, 1.2vw, 7px);
+      padding: 10px 10px;
+      background: var(--green);
+      color: #0a0a1a;
+      border: 2px solid #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    #mobile-tabbar,
+    #pwa-hint,
+    #mobile-coach-close {
+      display: none;
+    }
+
+    /* ==========================================================
+       PHONE APP LAYOUT — desktop styles above stay unchanged
+    ========================================================== */
+    @media (max-width: 960px) {
+      html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        background: #12122a;
+      }
+
+      body {
+        min-height: 100dvh;
+        min-height: 100svh;
+      }
+
+      body::after {
+        opacity: 0.45;
+      }
+
+      #app-layout {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        justify-content: flex-start;
+        width: 100%;
+        max-width: none;
+        height: 100dvh;
+        height: 100svh;
+        margin: 0;
+        padding: env(safe-area-inset-top) 0 0;
+        gap: 0;
+        overflow: hidden;
+      }
+
+      #main-column {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      header,
+      #leaderboard-panel,
+      #mobile-tabbar {
+        flex-shrink: 0;
+      }
+
+      header {
+        padding: 10px 12px 4px;
+      }
+
+      header h1 {
+        font-size: 15px;
+        letter-spacing: 1px;
+      }
+
+      header p {
+        display: none;
+      }
+
+      #pwa-hint {
+        display: block;
+        font-size: 6px;
+        line-height: 1.6;
+        color: var(--yellow);
+        margin-top: 4px;
+        padding: 0 12px 4px;
+      }
+
+      #leaderboard-panel {
+        width: calc(100% - 16px);
+        max-width: none;
+        margin: 4px 8px 6px;
+        padding: 8px 10px;
+        max-height: 78px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #leaderboard-panel h3 {
+        font-size: 8px;
+        margin-bottom: 4px;
+      }
+
+      #leaderboard-list {
+        font-size: 7px;
+        line-height: 1.9;
+      }
+
+      #game-container {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        padding: 0 8px 8px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #canvas-stage {
+        position: relative;
+        width: 100%;
+        flex: 0 1 auto;
+        min-height: 0;
+        display: block;
+      }
+
+      #game-canvas {
+        width: 100%;
+        height: auto;
+        max-height: min(52vh, calc(100dvh - 280px));
+        object-fit: contain;
+        border-width: 3px;
+        box-shadow: 0 0 14px rgba(233, 69, 96, 0.28);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: center;
+        padding: 12px 10px 16px;
+        gap: 10px;
+      }
+
+      .overlay h2 {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .overlay p, .overlay label {
+        font-size: 8px;
+        line-height: 1.7;
+      }
+
+      .retro-input {
+        font-size: 11px;
+        width: min(320px, 92%);
+        min-height: 48px;
+      }
+
+      .retro-btn {
+        font-size: 9px;
+        width: min(320px, 92%);
+        min-height: 50px;
+        padding: 12px 14px;
+      }
+
+      #trivia-options {
+        width: 100%;
+        gap: 8px;
+      }
+
+      #trivia-options .retro-btn {
+        font-size: 8px;
+        text-align: left;
+        width: 100%;
+        min-height: 52px;
+      }
+
+      #trivia-question {
+        font-size: 9px !important;
+      }
+
+      #trivia-lives {
+        font-size: 22px;
+        letter-spacing: 6px;
+      }
+
+      #score-breakdown {
+        font-size: 8px;
+        width: 100%;
+      }
+
+      #touch-hint {
+        font-size: 8px;
+        margin-top: 8px;
+        flex-shrink: 0;
+      }
+
+      #compress-btn {
+        max-width: none;
+        width: 100%;
+        margin: 8px 0 0;
+        min-height: 58px;
+        font-size: 11px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      #ai-assistant {
+        display: none;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        max-height: none;
+        z-index: 200;
+        border: none;
+        border-top: 3px solid var(--green);
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: calc(62px + env(safe-area-inset-bottom));
+      }
+
+      body.mobile-coach #ai-assistant {
+        display: flex;
+      }
+
+      body.mobile-coach #main-column {
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .assistant-header {
+        padding: 12px 12px 12px 12px;
+        position: relative;
+      }
+
+      #mobile-coach-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        min-width: 44px;
+        min-height: 44px;
+        background: var(--accent2);
+        color: #fff;
+        border: 2px solid var(--green);
+        font-family: 'Press Start 2P', monospace;
+        font-size: 10px;
+        cursor: pointer;
+      }
+
+      .assistant-title {
+        font-size: 9px;
+      }
+
+      .assistant-title span {
+        font-size: 6px;
+      }
+
+      #assistant-chat {
+        min-height: 0;
+      }
+
+      .chat-msg,
+      .chat-typing,
+      #assistant-input {
+        font-size: 8px;
+        line-height: 1.7;
+      }
+
+      .topic-chip {
+        font-size: 7px;
+        min-height: 40px;
+        padding: 8px 10px;
+      }
+
+      #assistant-input-row {
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      }
+
+      #assistant-input {
+        min-height: 46px;
+      }
+
+      #assistant-send {
+        font-size: 8px;
+        min-width: 64px;
+        min-height: 46px;
+      }
+
+      #mobile-tabbar {
+        display: flex;
+        flex-shrink: 0;
+        width: 100%;
+        background: #0a0a1a;
+        border-top: 3px solid var(--accent2);
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+        gap: 8px;
+        z-index: 300;
+      }
+
+      .mobile-tab {
+        flex: 1;
+        font-family: 'Press Start 2P', monospace;
+        font-size: 8px;
+        min-height: 48px;
+        background: var(--accent2);
+        color: #c8c8d8;
+        border: 2px solid #335588;
+        cursor: pointer;
+      }
+
+      .mobile-tab.active {
+        background: var(--accent);
+        color: #fff;
+        border-color: #fff;
+      }
+    }
+
+    @media (max-width: 960px) and (max-height: 500px) {
+      header p,
+      #pwa-hint,
+      #leaderboard-panel {
+        display: none;
+      }
+
+      header {
+        padding: 6px 8px 2px;
+      }
+
+      header h1 {
+        font-size: 12px;
+      }
+
+      #app-layout {
+        flex-direction: row;
+        padding-top: env(safe-area-inset-top);
+      }
+
+      #main-column {
+        flex: 1;
+      }
+
+      #game-container {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 8px;
+        padding: 4px 8px 8px;
+      }
+
+      #canvas-stage {
+        flex: 1;
+      }
+
+      #compress-btn {
+        width: 120px;
+        writing-mode: horizontal-tb;
+        margin: 0;
+        align-self: stretch;
+      }
+
+      #touch-hint {
+        display: none !important;
+      }
+
+      #mobile-tabbar {
+        flex-direction: column;
+        width: 72px;
+        border-top: none;
+        border-left: 3px solid var(--accent2);
+        padding: 8px 6px;
+      }
+
+      .mobile-tab {
+        font-size: 7px;
+        line-height: 1.4;
+      }
+
+      #ai-assistant {
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-right: 72px;
+      }
+    }

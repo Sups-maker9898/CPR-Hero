@@ -1,0 +1,10 @@
+{
+  "beats": [
+    "You are walking down the street on a normal day...",
+    "Suddenly, someone collapses on the sidewalk!",
+    "They are unconscious and not responding.",
+    "You must act NOW. Every second counts!",
+    "Call emergency services and perform CPR until help arrives."
+  ],
+  "call911Prompt": "Tap to call 911!"
+}
