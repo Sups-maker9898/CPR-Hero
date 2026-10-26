@@ -1,0 +1,410 @@
+{
+  "catalog": [
+    {
+      "id": "unconscious-adult",
+      "title": "UNCONSCIOUS ADULT",
+      "blurb": "A dialogue-driven rescue on 8th Street. Speak, assign tasks, and decide. No running — only communication."
+    }
+  ],
+  "scenarios": {
+    "unconscious-adult": {
+      "id": "unconscious-adult",
+      "title": "UNCONSCIOUS ADULT",
+      "subtitle": "Training conversation — not a substitute for a certified CPR course.",
+      "start": "scene_safe",
+      "totalSteps": 6,
+      "learningPoints": [
+        "Make the scene safe before you help — do not run into traffic.",
+        "Tap the shoulders and shout. Do not shake hard.",
+        "Point at a specific person to call emergency services and return when connected. Send another person for an AED.",
+        "Check breathing for no more than 10 seconds. Gasping is not normal breathing.",
+        "If unresponsive and not breathing normally, start CPR right away. Do not wait for the AED.",
+        "Stay with the dispatcher. Use the AED on a bare chest and follow the prompts. Keep CPR going until told to pause."
+      ],
+      "nodes": {
+        "scene_safe": {
+          "id": "scene_safe",
+          "kind": "choice",
+          "step": 1,
+          "scene": "street-traffic",
+          "title": "SCENE SAFETY",
+          "hint": "Look for traffic, fire, or wires. Speak up: wait until it is safe, then approach.",
+          "hintQuestion": "In this training scene, why must the hero say the street is unsafe before anyone runs to the collapsed adult?",
+          "lines": [
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "Dusk on 8th Street. Neon buzzes. An adult lies still near the curb. Cars still roll." },
+            { "speaker": "RICK", "portrait": "rick", "anim": "talk", "text": "Someone's down! Come on — we gotta run over there NOW!" },
+            { "speaker": "MAYA", "portrait": "maya", "anim": "talk", "text": "I don't know... those cars aren't stopping." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "anim": "talk", "text": "Hero. Before anyone moves — what do you SAY first?" }
+          ],
+          "choices": [
+            {
+              "id": "safe_approach",
+              "label": "\"Hold it! Check the street first. We only go when it's safe.\"",
+              "playerLine": "Hold it! Look both ways. We don't run into traffic. When the street is clear, THEN we approach.",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["sceneSafe"],
+              "next": "check_response",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "Yeah... yeah. I almost stepped off the curb." },
+                { "speaker": "MAYA", "portrait": "maya", "text": "Gap in the cars. Sidewalk's okay. Let's go." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Correct. You cannot help if you become the next patient." }
+              ]
+            },
+            {
+              "id": "run_traffic",
+              "label": "\"There's no time — sprint into the street!\"",
+              "playerLine": "There's no time! I'm going in!",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "A horn blasts. Tires scream. A car swerves." },
+                { "speaker": "RICK", "portrait": "rick", "text": "HEY! That car almost took you out!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Running into live traffic can make a second victim. Say it: wait, look, then approach." }
+              ]
+            },
+            {
+              "id": "cpr_first",
+              "label": "\"Forget looking — start chest compressions in the road!\"",
+              "playerLine": "Forget looking around — start compressions right here in the street!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "In the LANE? We'll all get hit!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Not yet. You have not checked safety, response, or breathing. CPR comes after those words and those checks." }
+              ]
+            },
+            {
+              "id": "walk_away",
+              "label": "\"Not our problem. Keep walking.\"",
+              "playerLine": "Someone else will deal with it. Let's go.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "They're not moving, though..." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. If the scene can be made safe, you stay, you speak, and you get help. Walking away delays care." }
+              ]
+            }
+          ]
+        },
+        "check_response": {
+          "id": "check_response",
+          "kind": "choice",
+          "step": 2,
+          "scene": "check-response",
+          "title": "CHECK RESPONSE",
+          "hint": "Kneel. Tap both shoulders. Shout. Watch the face. Do not shake.",
+          "hintQuestion": "What should the hero say and do to check if a collapsed adult responds, without shaking them?",
+          "lines": [
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "You kneel on the sidewalk. The adult is still. Neon paints their face." },
+            { "speaker": "RICK", "portrait": "rick", "text": "Are they... sleeping? Should I shake 'em?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Your words matter. How do you check if they respond?" }
+          ],
+          "choices": [
+            {
+              "id": "tap_shout",
+              "label": "Tap the shoulders and shout: \"Are you okay? Can you hear me?\"",
+              "playerLine": "I'm tapping the shoulders — ARE YOU OKAY? CAN YOU HEAR ME?",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["noResponse"],
+              "next": "assign_help",
+              "reply": [
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "No words. No eye opening. No movement toward your voice." },
+                { "speaker": "MAYA", "portrait": "maya", "text": "Nothing. That's bad, right?" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "No response. Emergency. Next: point at people and assign help." }
+              ]
+            },
+            {
+              "id": "shake_hard",
+              "label": "\"Wake up!\" — shake them hard",
+              "playerLine": "WAKE UP! *shakes hard*",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "Whoa, easy! You could hurt their neck!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Hard shaking can cause injury. Tap the shoulders and shout. Try that line." }
+              ]
+            },
+            {
+              "id": "splash_water",
+              "label": "\"Maya, splash water on their face!\"",
+              "playerLine": "Maya, grab a bottle — splash their face!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "I... I don't think that's how this works." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "That is not a response check and can cause harm. Tap and shout. No water." }
+              ]
+            },
+            {
+              "id": "wait_wake",
+              "label": "\"Give them two minutes. Maybe they'll sit up.\"",
+              "playerLine": "Let's wait a couple minutes. Maybe they'll wake up.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "Two minutes of just standing here?!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Waiting wastes time. If they do not respond now, you assign help now." }
+              ]
+            }
+          ]
+        },
+        "assign_help": {
+          "id": "assign_help",
+          "kind": "choice",
+          "step": 3,
+          "scene": "calling",
+          "title": "ASSIGN HELP",
+          "hint": "Point at one person for the call. Point at another for the AED. Tell the caller to come back when connected.",
+          "hintQuestion": "Why should the hero point at a specific bystander to call emergency services and return when connected, and send another for an AED?",
+          "lines": [
+            { "speaker": "RICK", "portrait": "rick", "text": "Tell us what to do! I have a phone!" },
+            { "speaker": "MAYA", "portrait": "maya", "text": "There's a building lobby behind us. I can run." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Don't say 'somebody.' Point. Give each person one job." }
+          ],
+          "choices": [
+            {
+              "id": "call_and_aed",
+              "label": "\"Rick, call emergency services and come back when you're connected. Maya, get an AED!\"",
+              "playerLine": "Rick — call emergency services and return to tell me when you've connected. Maya — get an AED and bring it here!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["helpAssigned"],
+              "next": "phone_connect",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "Got it! Calling now — I'll shout when they pick up!" },
+                { "speaker": "MAYA", "portrait": "maya", "text": "AED. On it. Don't leave them." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "That's how you activate help. Stay with the patient." }
+              ]
+            },
+            {
+              "id": "leave_for_aed",
+              "label": "\"I'll go hunt for an AED. You two wait.\"",
+              "playerLine": "I'll go find an AED myself. You two just... wait here with them.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "You're leaving us with someone who isn't answering?!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Do not abandon them for a long search. Send Maya. You stay. Rick calls." }
+              ]
+            },
+            {
+              "id": "wait_crowd",
+              "label": "\"Someone should call... whenever.\"",
+              "playerLine": "Uh, somebody should probably call, I guess.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "Somebody who? We're looking at YOU." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Vague words waste seconds. Point: 'YOU — call, then come back when connected.'" }
+              ]
+            },
+            {
+              "id": "drive_hospital",
+              "label": "\"Help me load them in a car. We'll drive.\"",
+              "playerLine": "Grab their legs. We'll drive them to the hospital!",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "I can't drive AND you can't do CPR in a back seat like that!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Bring help here. You cannot drive and give CPR. Call, AED, stay." }
+              ]
+            }
+          ]
+        },
+        "phone_connect": {
+          "id": "phone_connect",
+          "kind": "talk",
+          "step": 3,
+          "scene": "calling",
+          "title": "DISPATCHER",
+          "next": "check_breathing",
+          "hint": "Keep Rick on speaker. Tell dispatch the adult is unresponsive. Then check breathing.",
+          "lines": [
+            { "speaker": "RICK", "portrait": "rick", "text": "They're CONNECTED! I'm putting it on speaker!" },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Emergency. What's the exact location and what's happening?" },
+            { "speaker": "YOU", "portrait": "hero", "text": "8th Street sidewalk. Adult collapsed. Not responding. We're with them." },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Stay on the line. Is the person breathing normally? Look at the chest." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Dispatcher is coaching you. Next words: a fast breathing check — ten seconds, not a minute." }
+          ]
+        },
+        "check_breathing": {
+          "id": "check_breathing",
+          "kind": "choice",
+          "step": 4,
+          "scene": "check-breathing",
+          "title": "CHECK BREATHING",
+          "hint": "Look, listen, feel — no more than 10 seconds. Occasional gasping is NOT normal breathing.",
+          "hintQuestion": "Why is a 10-second breathing check required, and why is gasping not treated as normal breathing?",
+          "lines": [
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Look at the chest. Tell me if you see normal breathing." },
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "The chest is still... then a strange isolated gasp." },
+            { "speaker": "RICK", "portrait": "rick", "text": "They gasped! That means they're okay, right?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Answer carefully. What do you tell Rick and Dispatch?" }
+          ],
+          "choices": [
+            {
+              "id": "ten_seconds",
+              "label": "\"Ten seconds: look, listen, feel. That gasp is NOT normal breathing.\"",
+              "playerLine": "Looking ten seconds — look, listen, feel. That gasp is NOT normal breathing. Unresponsive, not breathing normally.",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["gaspingNoted"],
+              "next": "start_cpr",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Copy. If they are unresponsive and not breathing normally, start CPR. I'll stay with you." },
+                { "speaker": "RICK", "portrait": "rick", "text": "So the gasp wasn't 'okay'..." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Correct. Agonal gasps are a reason to start CPR, not to wait." }
+              ]
+            },
+            {
+              "id": "watch_minute",
+              "label": "\"Dispatch, I'm going to watch for a full minute to be sure.\"",
+              "playerLine": "I'll watch for a whole minute to be extra sure.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Do not wait a minute. A breathing check is about ten seconds." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Too slow. Long watching is a dangerous delay. Ten seconds, then act." }
+              ]
+            },
+            {
+              "id": "gasping_ok",
+              "label": "\"They gasped, so they're breathing. We wait.\"",
+              "playerLine": "They gasped once, so they're breathing. We can wait.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Isolated gasping is not normal breathing. Treat it like no breathing." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Gasping can happen when the heart has stopped. Do not wait." }
+              ]
+            },
+            {
+              "id": "recovery_now",
+              "label": "\"Roll them on their side and wait.\"",
+              "playerLine": "Recovery position. Roll them on their side.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Not if they are not breathing normally. They need CPR on their back." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe here. Recovery position is for unresponsive AND breathing normally." }
+              ]
+            }
+          ]
+        },
+        "start_cpr": {
+          "id": "start_cpr",
+          "kind": "choice",
+          "step": 5,
+          "scene": "cpr",
+          "title": "BEGIN CPR",
+          "hint": "Start compressions now, center of the chest. Do not wait for Maya's AED.",
+          "hintQuestion": "If the adult is unresponsive and not breathing normally, why must the hero start CPR before the AED arrives?",
+          "lines": [
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Hands on the center of the chest. Push hard and fast. Count out loud." },
+            { "speaker": "RICK", "portrait": "rick", "text": "Maya isn't back with the box yet... do we wait?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Speak the decision. Waiting without compressions means no blood flow." }
+          ],
+          "choices": [
+            {
+              "id": "start_compressions",
+              "label": "\"Starting CPR now. Center of the chest. Hard and fast.\"",
+              "playerLine": "I'm starting CPR now — hands in the center of the chest, hard and fast. Rick, keep Dispatch on speaker!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["cprStarted"],
+              "next": "aed_dispatcher",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Good. Keep going. Let the chest come all the way up between pushes." },
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "You compress on a firm sidewalk. Count in rhythm." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Correct. 100 to 120 a minute. This game's rhythm is 110. Don't stop for the box." }
+              ]
+            },
+            {
+              "id": "wait_aed_only",
+              "label": "\"We wait for the AED. No compressions until then.\"",
+              "playerLine": "We'll wait for the AED. No compressions until Maya's back.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Start CPR now. Use the AED the moment it arrives — don't wait to push." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. No compressions means no blood flow. Start now." }
+              ]
+            },
+            {
+              "id": "breaths_only",
+              "label": "\"I'll only give breaths. No chest pushes.\"",
+              "playerLine": "I'll just give breaths. Skipping the chest.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Chest compressions are the priority. Do not skip them." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "For a collapsed adult, push. Breaths can be added if trained — never instead of compressions." }
+              ]
+            },
+            {
+              "id": "sit_up",
+              "label": "\"Sit them up so they can breathe.\"",
+              "playerLine": "Help me sit them up. Maybe they'll breathe easier.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "They're dead weight — this isn't helping!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. They need a firm flat back for CPR, not sitting." }
+              ]
+            }
+          ]
+        },
+        "aed_dispatcher": {
+          "id": "aed_dispatcher",
+          "kind": "choice",
+          "step": 6,
+          "scene": "aed",
+          "title": "AED + DISPATCH",
+          "hint": "Keep CPR. Turn the AED on. Bare chest. Follow voice prompts. Stay on the line.",
+          "hintQuestion": "When the AED arrives, what should the hero tell Maya and Dispatch to do?",
+          "lines": [
+            { "speaker": "MAYA", "portrait": "maya", "text": "GOT IT! Yellow box — what do I do?!" },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Turn it on. Bare the chest. Follow the pictures. Keep CPR until it says to stop." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "Last decision. Your line to Maya." }
+          ],
+          "choices": [
+            {
+              "id": "follow_aed",
+              "label": "\"Keep CPR. Maya, power it on, pads on bare skin, follow the voice.\"",
+              "playerLine": "Keep compressions until it talks. Maya — turn it on, pads on BARE skin, follow the voice prompts. Dispatch, stay with us!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["aedUsed"],
+              "next": "COMPLETE",
+              "reply": [
+                { "speaker": "AED", "portrait": "aed", "text": "ANALYZING. STAND CLEAR." },
+                { "speaker": "YOU", "portrait": "hero", "text": "Clear! ... Shock delivered. Back on the chest!" },
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Units are pulling up. Keep CPR until they take over." },
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "Sirens wash the neon red. Paramedics kneel in. You did the talking that got help here." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Training complete. Review the log. This was practice — take a real CPR course." }
+              ]
+            },
+            {
+              "id": "stop_all",
+              "label": "\"Stop everything. The ambulance is close enough.\"",
+              "playerLine": "Stop CPR. Help is close. We wait.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Do not stop. Continue until the AED tells you to pause or crews take over." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Unsafe. Close is not here. Compressions still matter." }
+              ]
+            },
+            {
+              "id": "ignore_dispatch",
+              "label": "\"Rick, hang up. I need to focus.\"",
+              "playerLine": "Rick, hang up on Dispatch. I need quiet.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Stay on the line if you can. I can still coach the AED steps." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Keep speakerphone. Dispatchers send the right help and talk you through." }
+              ]
+            },
+            {
+              "id": "pads_clothes",
+              "label": "\"Stick the pads on over the coat. Faster!\"",
+              "playerLine": "Just slap the pads on over the coat — faster!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "The picture on the pad is a bare chest..." },
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "Expose the chest. Pads on skin. Then analyze." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "Pads on bare skin. Then stand clear when it says analyzing." }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

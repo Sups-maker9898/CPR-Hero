@@ -51,6 +51,7 @@
       <label for="player-name">HERO NAME</label>
       <input id="player-name" class="retro-input" maxlength="20" placeholder="Your name..." aria-label="Player name">
       <button id="start-btn" class="retro-btn">START MISSION</button>
+      <button id="scenario-btn" class="retro-btn secondary">SCENARIO MODE</button>
     </div>
 
     <!-- INTRO STORY OVERLAY -->
@@ -87,6 +88,39 @@
       <div id="score-breakdown"></div>
       <button id="retry-btn" class="retro-btn">TRY AGAIN</button>
     </div>
+
+    <!-- EMERGENCY SCENARIO MODE — dialogue visual novel -->
+    <div id="scenario-overlay" class="overlay scenario-vn">
+      <div id="scenario-hud">
+        <span id="scenario-xp">XP 0</span>
+        <span id="scenario-progress">STEP 1 / 6</span>
+        <span id="scenario-step-label">SCENE</span>
+        <button type="button" id="scenario-log-btn" class="retro-btn secondary">LOG</button>
+      </div>
+      <div id="scenario-log" class="hidden" aria-label="Conversation history"></div>
+      <div id="scenario-dialog">
+        <div id="scenario-portrait" data-face="hero" aria-hidden="true">
+          <canvas id="scenario-portrait-art" width="64" height="64"></canvas>
+        </div>
+        <div id="scenario-dialog-main">
+          <p id="scenario-speaker">NARRATOR</p>
+          <p id="scenario-line" aria-live="polite"></p>
+        </div>
+      </div>
+      <div id="scenario-options"></div>
+      <div id="scenario-actions">
+        <button type="button" id="scenario-continue-btn" class="retro-btn">CONTINUE</button>
+        <button type="button" id="scenario-hint-btn" class="retro-btn secondary">HINT</button>
+        <button type="button" id="scenario-restart-btn" class="retro-btn secondary">RESTART</button>
+      </div>
+    </div>
+
+    <div id="scenario-results-overlay" class="overlay">
+      <h2>SCENARIO COMPLETE</h2>
+      <div id="scenario-report"></div>
+      <button type="button" id="scenario-playagain-btn" class="retro-btn">PLAY AGAIN</button>
+      <button type="button" id="scenario-menu-btn" class="retro-btn secondary">MAIN MENU</button>
+    </div>
     </div><!-- /canvas-stage -->
     <p id="touch-hint">TAP THE SCREEN TO COMPRESS</p>
     <button type="button" id="compress-btn" aria-label="Compress chest — Spacebar or click">COMPRESS — SPACEBAR / CLICK</button>
@@ -97,7 +131,7 @@
   <!-- AI MEDICAL COACH — stays open for the entire game -->
   <aside id="ai-assistant" aria-label="CPR training assistant">
     <div class="assistant-header">
-      <div class="assistant-avatar" aria-hidden="true">🩺</div>
+      <div class="assistant-avatar" aria-hidden="true"><img src="/img/coach.png" alt=""></div>
       <div class="assistant-title">
         COACH PULSE
         <span>CPR & First Aid Guide</span>
@@ -112,6 +146,7 @@
       <button type="button" class="topic-chip" data-topic="game">How to Play</button>
       <button type="button" class="topic-chip" data-topic="firstaid">First Aid</button>
       <button type="button" class="topic-chip" data-topic="emergency">Call 911</button>
+      <button type="button" class="topic-chip" data-topic="scenario">Scenario</button>
     </div>
     <div id="assistant-input-row">
       <input id="assistant-input" type="text" maxlength="120" placeholder="Ask about CPR..." aria-label="Ask Coach Pulse a question">
@@ -131,6 +166,8 @@
   <script src="/js/rhythm.js"></script>
   <script src="/js/trivia.js"></script>
   <script src="/js/coach.js"></script>
+  <script src="/js/sprites.js"></script>
+  <script src="/js/scenario.js"></script>
   <script src="/js/game.js"></script>
 </body>
 </html>

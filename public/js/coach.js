@@ -13,34 +13,53 @@ CPRHero.createCoach = function createCoach(data) {
   const tutorial = data.tutorial || [];
   const narrativeHints = data.narrativeHints || [];
 
+  const GEMINI_COACH_URL = '/api/coach/ask';
   const JAVA_COACH_URL = `${location.protocol}//${location.hostname}:8080/api/coach/ask`;
-  const JAVA_RETRY_MS = 30000;
+  const GEMINI_TIMEOUT_MS = 12000;
+  const JAVA_TIMEOUT_MS = 1500;
+  const COACH_RETRY_MS = 30000;
 
   let tutorialStarted = false;
   let lastContextMessage = '';
+  let geminiUnavailableUntil = 0;
   let javaUnavailableUntil = 0;
 
-  async function askJavaCoach(question) {
-    if (location.protocol !== 'http:' || Date.now() < javaUnavailableUntil) return null;
-
+  async function askCoach(url, question, timeoutMs) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1500);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetch(JAVA_COACH_URL, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),
         signal: controller.signal
       });
-      if (!response.ok) throw new Error(`Java coach HTTP ${response.status}`);
+      if (!response.ok) throw new Error(`Coach HTTP ${response.status}`);
       const result = await response.json();
       return typeof result.answer === 'string' && result.answer ? result.answer : null;
-    } catch (err) {
-      javaUnavailableUntil = Date.now() + JAVA_RETRY_MS;
-      return null;
     } finally {
       clearTimeout(timer);
+    }
+  }
+
+  async function askGeminiCoach(question) {
+    if (Date.now() < geminiUnavailableUntil) return null;
+    try {
+      return await askCoach(GEMINI_COACH_URL, question, GEMINI_TIMEOUT_MS);
+    } catch (err) {
+      geminiUnavailableUntil = Date.now() + COACH_RETRY_MS;
+      return null;
+    }
+  }
+
+  async function askJavaCoach(question) {
+    if (location.protocol !== 'http:' || Date.now() < javaUnavailableUntil) return null;
+    try {
+      return await askCoach(JAVA_COACH_URL, question, JAVA_TIMEOUT_MS);
+    } catch (err) {
+      javaUnavailableUntil = Date.now() + COACH_RETRY_MS;
+      return null;
     }
   }
 
@@ -106,7 +125,7 @@ CPRHero.createCoach = function createCoach(data) {
     addMessage(trimmed, 'user');
     inputEl.value = '';
     showTyping(true);
-    const answer = (await askJavaCoach(trimmed)) || findAnswer(trimmed);
+    const answer = (await askGeminiCoach(trimmed)) || (await askJavaCoach(trimmed)) || findAnswer(trimmed);
     await reply(answer, 400 + Math.random() * 300);
   }
 
@@ -134,6 +153,21 @@ CPRHero.createCoach = function createCoach(data) {
     reply(isCorrect ? data.triviaCorrect : data.triviaWrong, 400);
   }
 
+  function speakScenario(text) {
+    if (!text) return Promise.resolve();
+    return reply(text, 350);
+  }
+
+  async function explainScenarioHint(predefinedHint, aiQuestion) {
+    if (predefinedHint) await reply(predefinedHint, 300);
+    if (!aiQuestion) return;
+
+    const extra = await askGeminiCoach(aiQuestion);
+    if (extra && extra !== predefinedHint) {
+      await reply(extra, 400);
+    }
+  }
+
   sendBtn.addEventListener('click', () => handleUserMessage(inputEl.value));
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -152,5 +186,13 @@ CPRHero.createCoach = function createCoach(data) {
 
   setTimeout(runTutorial, 600);
 
-  return { onGameState, onNarrativeStep, notifyTriviaResult, reply, addMessage };
+  return {
+    onGameState,
+    onNarrativeStep,
+    notifyTriviaResult,
+    speakScenario,
+    explainScenarioHint,
+    reply,
+    addMessage
+  };
 };

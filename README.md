@@ -14,6 +14,7 @@ An interactive, educational 2D retro arcade game that teaches the critical impor
 
 - **Backend:** Node.js + Express + SQLite leaderboard
 - **Frontend:** HTML + CSS + modular JavaScript + JSON content files
+- **AI Coach (optional):** Python + Google Gemini, with Java keyword matching and built-in JSON as fallbacks
 
 ## Quick Start
 
@@ -34,12 +35,34 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `public/js/rhythm.js` | 110 BPM timing math |
 | `public/js/trivia.js` | Trivia question rotation |
 | `public/js/coach.js` | Coach Pulse assistant |
+| `public/js/scenario.js` | Emergency Scenario Mode engine (JSON rules, not AI) |
 | `public/js/leaderboard.js` | Score API calls |
 | `public/data/trivia.json` | Trivia questions |
 | `public/data/story.json` | Intro story text |
 | `public/data/coach.json` | Tutorial, tips, and first-aid answers |
+| `public/data/scenarios.json` | Scenario Mode branching, scoring, and reviewed feedback |
 | `server.js` | Node.js + Express + SQLite (unchanged) |
-| `java/CoachServer.java` | Optional Java Coach service (answers Coach Pulse questions) |
+| `java/CoachServer.java` | Optional Java Coach service (keyword answers) |
+| `python/coach_server.py` | Optional Gemini Coach Pulse service |
+| `.env.example` | Template for `GEMINI_API_KEY` (copy to `.env`) |
+
+## Optional: Gemini Coach (Python)
+
+Requires Python 3.9+ and a [Gemini API key](https://aistudio.google.com/apikey). The key stays in `.env` on the server — it is never sent to the browser.
+
+```bash
+copy .env.example .env
+```
+
+Put your key in `.env` as `GEMINI_API_KEY=...`, then in a second terminal:
+
+```bash
+py -3 -m venv python/.venv
+python\.venv\Scripts\python.exe -m pip install -r python/requirements.txt
+python\.venv\Scripts\python.exe python/coach_server.py
+```
+
+It listens on port 8081. Node.js proxies `POST /api/coach/ask` to it, so phones on the same Wi-Fi work through port 3000. Typed Coach Pulse questions use Gemini first, then Java (if running), then the built-in `coach.json` answers.
 
 ## Optional: Java Coach service
 
@@ -57,6 +80,7 @@ It listens on port 8080 and reads `public/data/coach.json`. When it is running, 
 |--------|----------|-------------|
 | GET | `/api/leaderboard` | Returns top 10 high scores |
 | POST | `/api/score` | Submits a new score entry |
+| POST | `/api/coach/ask` | Proxies a Coach Pulse question to the Gemini Python service |
 
 ## Score Formula
 
@@ -77,6 +101,8 @@ Total = Compression Points + (Trivia Correct × 50) + (Time Remaining × 5)
 5. Oxygen hits 0% → trivia safety net (revive at 50% health on correct answer)
 6. Win when timer hits 0:00 (ambulance + paramedic thumbs-up) or lose all 3 lives
 7. Score auto-submitted to leaderboard
+
+**Emergency Scenario Mode** is a separate path from the home screen (`SCENARIO MODE`). Branching and XP come from `public/data/scenarios.json`. Coach Pulse only explains; it cannot change the correct answer.
 
 ## Notes
 

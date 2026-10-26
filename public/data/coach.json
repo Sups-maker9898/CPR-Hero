@@ -4,7 +4,8 @@
     "cpr": "CPR pushes blood and oxygen through the body when the heart stops. Push hard and fast in the center of the chest at 100–120 BPM — about the beat of \"Stayin' Alive\". In this game we use 110 BPM. Call emergency services FIRST, then start compressions.",
     "game": "HOW TO PLAY: Match the shrinking ring at 110 BPM. PERFECT (±65ms) = full oxygen + 10 pts. GOOD (±130ms) = small oxygen boost. MISS = oxygen drops. You have 3 red hearts (lives). Win by surviving 2:00 until the ambulance arrives!",
     "firstaid": "FIRST AID BASICS: Always check if the scene is safe. See if the person responds. Call emergency services (911, 112, or 119). Small cuts: clean and bandage. Burns: cool with running water. Choking: get adult help immediately. Neck injury: keep them still.",
-    "emergency": "In an emergency, call your local emergency number right away — 911 (USA), 112 (Europe), or 119 (Japan/Korea). Tell them where you are and what happened. Stay on the line. Only start CPR after checking safety and calling for help."
+    "emergency": "In an emergency, call your local emergency number right away — 911 (USA), 112 (Europe), or 119 (Japan/Korea). Tell them where you are and what happened. Stay on the line. Only start CPR after checking safety and calling for help.",
+    "scenario": "EMERGENCY SCENARIO MODE is a TALKING game, not a running game. You speak, assign jobs, and choose lines. 1) Say the scene is safe. 2) Tap and shout. 3) Tell one bystander to call emergency services and come back when connected; send another for an AED. 4) Check breathing ≤10 seconds — gasping is NOT normal. 5) Start CPR if unresponsive and not breathing normally. 6) Stay on the dispatcher line; use the AED on bare skin. Wrong lines do not skip steps. Training only — not a substitute for a CPR course."
   },
   "knowledge": [
     { "keys": ["hello", "hi", "hey", "start"], "answer": "Hi! I'm Coach Pulse. I'll teach you CPR, first aid, and how to play CPR HERO. Tap a topic button or ask me anything!" },
@@ -25,7 +26,11 @@
     { "keys": ["neck", "spine", "move"], "answer": "If someone may have a neck injury, do NOT move them unless they are in immediate danger. Keep them still and call emergency services." },
     { "keys": ["safe", "safety", "scene"], "answer": "Before helping anyone, check that the area is safe for YOU. You cannot help if you get hurt too. Look for traffic, fire, or other dangers first." },
     { "keys": ["play", "how", "tutorial", "game"], "answerKey": "game" },
-    { "keys": ["what", "teach", "learn"], "answer": "I can teach CPR rhythm, calling emergency services, first-aid trivia, and how to beat CPR HERO. Try asking \"What is CPR?\" or tap CPR Basics!" }
+    { "keys": ["what", "teach", "learn"], "answer": "I can teach CPR rhythm, calling emergency services, first-aid trivia, and how to beat CPR HERO. Try asking \"What is CPR?\" or tap CPR Basics!" },
+    { "keys": ["scenario", "collapsed", "unconscious adult", "branch"], "answerKey": "scenario" },
+    { "keys": ["gasp", "gasping", "agonal"], "answer": "Occasional gasping (agonal breaths) is NOT normal breathing. If the person is unresponsive and not breathing normally, start CPR. Do not wait." },
+    { "keys": ["aed", "defibrillator", "pads"], "answer": "Use an AED as soon as it is available. Turn it on, put pads on a bare chest, follow the voice prompts, and continue CPR when it tells you to. Do not delay CPR while waiting for the box to arrive." },
+    { "keys": ["recovery position"], "answer": "The recovery position is for someone who is unresponsive but breathing normally. If they are not breathing normally, start CPR instead." }
   ],
   "stateTips": {
     "START": "Enter your hero name and press START MISSION. I'll stay here to help you the whole game!",
@@ -34,7 +39,8 @@
     "TRIVIA": "Take your time reading the question. Pick the safest, most correct first-aid answer. You can ask me for hints!",
     "WIN": "Amazing work! You kept the patient alive until the ambulance came. Real CPR heroes stay calm and keep going!",
     "GAME_OVER": "Don't worry — every expert was once a beginner. Try again and focus on the beat. Ask me about CPR rhythm!",
-    "RESULTS": "Check your mission report! High scores reward perfect rhythm, trivia knowledge, and time remaining."
+    "RESULTS": "Check your mission report! High scores reward perfect rhythm, trivia knowledge, and time remaining.",
+    "SCENARIO": "Scenario Mode: pick the safest next action. I can explain, but the game — not me — decides the correct answer and XP."
   },
   "tutorial": [
     "Hi! I'm Coach Pulse, your CPR training partner.",

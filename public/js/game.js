@@ -25,11 +25,32 @@
       trivia: document.getElementById('trivia-overlay'),
       win: document.getElementById('win-overlay'),
       gameover: document.getElementById('gameover-overlay'),
-      results: document.getElementById('results-overlay')
+      results: document.getElementById('results-overlay'),
+      scenario: document.getElementById('scenario-overlay'),
+      scenarioResults: document.getElementById('scenario-results-overlay')
     };
 
     const playerNameInput = document.getElementById('player-name');
     const startBtn = document.getElementById('start-btn');
+    const scenarioBtn = document.getElementById('scenario-btn');
+    const scenarioStepLabel = document.getElementById('scenario-step-label');
+    const scenarioOptions = document.getElementById('scenario-options');
+    const scenarioXp = document.getElementById('scenario-xp');
+    const scenarioProgress = document.getElementById('scenario-progress');
+    const scenarioContinueBtn = document.getElementById('scenario-continue-btn');
+    const scenarioRestartBtn = document.getElementById('scenario-restart-btn');
+    const scenarioHintBtn = document.getElementById('scenario-hint-btn');
+    const scenarioLogBtn = document.getElementById('scenario-log-btn');
+    const scenarioLog = document.getElementById('scenario-log');
+    const scenarioPortrait = document.getElementById('scenario-portrait');
+    const scenarioPortraitArt = document.getElementById('scenario-portrait-art');
+    const scenarioSpeaker = document.getElementById('scenario-speaker');
+    const scenarioLine = document.getElementById('scenario-line');
+    const scenarioDialog = document.getElementById('scenario-dialog');
+    const scenarioOverlay = document.getElementById('scenario-overlay');
+    const scenarioReport = document.getElementById('scenario-report');
+    const scenarioPlayAgainBtn = document.getElementById('scenario-playagain-btn');
+    const scenarioMenuBtn = document.getElementById('scenario-menu-btn');
     const narrativeText = document.getElementById('narrative-text');
     const narrativeBtn = document.getElementById('narrative-btn');
     const call911Btn = document.getElementById('call911-btn');
@@ -69,7 +90,9 @@
       TRIVIA: 'TRIVIA',
       WIN: 'WIN',
       GAME_OVER: 'GAME_OVER',
-      RESULTS: 'RESULTS'
+      RESULTS: 'RESULTS',
+      SCENARIO: 'SCENARIO',
+      SCENARIO_RESULTS: 'SCENARIO_RESULTS'
     };
 
     // --- LIVE GAME VARIABLES (change during play) ---
@@ -104,6 +127,20 @@
 
     // Win animation
     let winAnimStart = 0;
+
+    let scenarioEngine = null;
+    let scenarioScene = 'street-traffic';
+    let scenarioPulse = 0;
+    let scenarioQueue = [];
+    let scenarioAfterQueue = 'choices';
+    let scenarioTypeTimer = 0;
+    let scenarioFullText = '';
+    let scenarioTyped = 0;
+    let scenarioTalking = false;
+    let scenarioSpeakerId = 'narrator';
+    let scenarioMusicOn = false;
+    let scenarioMusicTimer = 0;
+    let scenarioMusicStep = 0;
 
     // Phase 1 local leaderboard (temporary until Phase 2 backend)
 
@@ -190,6 +227,7 @@
 
       switch (newState) {
         case STATE.START:
+          stopScenarioMusic();
           showOverlay('start');
           break;
         case STATE.NARRATIVE:
@@ -215,6 +253,12 @@
           break;
         case STATE.RESULTS:
           showOverlay('results');
+          break;
+        case STATE.SCENARIO:
+          showOverlay('scenario');
+          break;
+        case STATE.SCENARIO_RESULTS:
+          showOverlay('scenarioResults');
           break;
       }
 
@@ -541,6 +585,13 @@
 
     // Capture phase: space works for CPR even when chat input was focused
     window.addEventListener('keydown', (e) => {
+      if (state === STATE.SCENARIO && (e.code === 'Space' || e.code === 'Enter')) {
+        if (isTypingInTextField()) return;
+        e.preventDefault();
+        advanceScenarioDialogue();
+        return;
+      }
+
       if (handleGameplayKey(e)) return;
 
       // Outside gameplay, allow normal space typing in text fields
@@ -553,24 +604,27 @@
     });
 
     canvas.addEventListener('touchstart', (e) => {
+      if (state === STATE.SCENARIO) {
+        e.preventDefault();
+        advanceScenarioDialogue();
+        return;
+      }
       e.preventDefault();
       handleCompress();
     }, { passive: false });
 
     canvas.addEventListener('click', () => {
+      if (state === STATE.SCENARIO) {
+        advanceScenarioDialogue();
+        return;
+      }
       if (isTouchDevice) return;
       handleCompress();
     });
 
     // --- BUTTON EVENTS ---
     startBtn.addEventListener('click', async () => {
-      const name = playerNameInput.value.trim();
-      if (!name) {
-        playerNameInput.focus();
-        return;
-      }
-
-      playerName = name;
+      if (!requireHeroName()) return;
       initAudio();
       resetGame();
       renderLeaderboard(await fetchGlobalLeaderboard());
@@ -585,6 +639,281 @@
       playerNameInput.value = playerName;
       renderLeaderboard(await fetchGlobalLeaderboard());
       setState(STATE.START);
+    });
+
+    function requireHeroName() {
+      const name = playerNameInput.value.trim();
+      if (!name) {
+        playerNameInput.focus();
+        return false;
+      }
+      playerName = name;
+      return true;
+    }
+
+    function updateScenarioHud(snap) {
+      scenarioXp.textContent = 'XP ' + snap.xp;
+      scenarioProgress.textContent = snap.node
+        ? 'STEP ' + snap.node.step + ' / ' + snap.totalSteps
+        : 'DONE';
+      scenarioStepLabel.textContent = snap.node ? snap.node.title : 'COMPLETE';
+    }
+
+    function portraitFace(speaker) {
+      const name = (speaker || '').toUpperCase();
+      if (name === 'YOU' || name === playerName.toUpperCase()) return 'hero';
+      if (name === 'RICK') return 'rick';
+      if (name === 'MAYA') return 'maya';
+      if (name === 'COACH PULSE' || name === 'COACH') return 'coach';
+      if (name === 'DISPATCH') return 'dispatch';
+      if (name === 'AED') return 'aed';
+      if (name === 'PATIENT') return 'patient';
+      return 'narrator';
+    }
+
+    function showScenarioLine(line) {
+      const speaker = line.speaker === 'YOU' ? (playerName.toUpperCase() || 'YOU') : (line.speaker || 'NARRATOR');
+      scenarioSpeaker.textContent = speaker;
+      scenarioSpeakerId = portraitFace(line.speaker);
+      scenarioPortrait.dataset.face = scenarioSpeakerId;
+      scenarioPortrait.classList.add('talking');
+      scenarioTalking = true;
+      scenarioFullText = line.text || '';
+      scenarioTyped = 0;
+      scenarioLine.textContent = '';
+      scenarioTypeTimer = 0;
+      if (scenarioEngine) scenarioEngine.logLine(line, line.kind || 'line');
+      if (line.speaker === 'COACH PULSE' && window.CoachPulse) {
+        CoachPulse.speakScenario(line.text);
+      }
+    }
+
+    function finishScenarioType() {
+      scenarioTyped = scenarioFullText.length;
+      scenarioLine.textContent = scenarioFullText;
+      scenarioTalking = false;
+      scenarioPortrait.classList.remove('talking');
+    }
+
+    function tickScenarioTypewriter(dt) {
+      if (state !== STATE.SCENARIO) return;
+      if (scenarioTyped >= scenarioFullText.length) {
+        scenarioTalking = false;
+        scenarioPortrait.classList.remove('talking');
+        return;
+      }
+      scenarioTypeTimer += dt;
+      while (scenarioTypeTimer >= 16 && scenarioTyped < scenarioFullText.length) {
+        scenarioTypeTimer -= 16;
+        scenarioTyped += 1;
+        scenarioLine.textContent = scenarioFullText.slice(0, scenarioTyped);
+        if (scenarioTyped % 2 === 0) playTone(520, 0.03, 'square', 0.02);
+      }
+    }
+
+    function renderScenarioLog(history) {
+      if (!history || !history.length) {
+        scenarioLog.innerHTML = '<p>No lines yet.</p>';
+        return;
+      }
+      scenarioLog.innerHTML = history.map((entry) => {
+        const cls = entry.speaker === 'YOU' ? 'log-you'
+          : entry.speaker === 'COACH PULSE' ? 'log-coach'
+          : entry.speaker === 'DISPATCH' ? 'log-dispatch'
+          : entry.result === 'unsafe' ? 'log-unsafe' : '';
+        return '<p class="' + cls + '"><strong>' + escapeHtml(entry.speaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>';
+      }).join('');
+      scenarioLog.scrollTop = scenarioLog.scrollHeight;
+    }
+
+    function hideScenarioChoices() {
+      scenarioOptions.classList.add('hidden');
+      scenarioOptions.innerHTML = '';
+      scenarioContinueBtn.disabled = false;
+    }
+
+    function showScenarioChoices(options) {
+      scenarioOptions.classList.remove('hidden');
+      scenarioOptions.innerHTML = '';
+      scenarioContinueBtn.disabled = true;
+      (options || []).forEach((option) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'retro-btn';
+        btn.textContent = option.label;
+        btn.dataset.optionId = option.id;
+        btn.addEventListener('click', () => onScenarioChoice(option.id));
+        scenarioOptions.appendChild(btn);
+      });
+    }
+
+    function playScenarioQueue(lines, after) {
+      scenarioQueue = (lines || []).slice();
+      scenarioAfterQueue = after;
+      hideScenarioChoices();
+      scenarioDialog.className = '';
+      if (scenarioQueue.length) {
+        showScenarioLine(scenarioQueue.shift());
+      } else {
+        finishScenarioQueue();
+      }
+    }
+
+    function finishScenarioQueue() {
+      finishScenarioType();
+      if (scenarioAfterQueue === 'choices') {
+        const snap = scenarioEngine.snapshot();
+        showScenarioChoices(snap.options);
+      } else if (scenarioAfterQueue === 'advance') {
+        goScenarioNext();
+      } else if (scenarioAfterQueue === 'retry') {
+        const snap = scenarioEngine.snapshot();
+        showScenarioChoices(snap.options);
+      }
+    }
+
+    function advanceScenarioDialogue() {
+      if (state !== STATE.SCENARIO) return;
+      if (scenarioTyped < scenarioFullText.length) {
+        finishScenarioType();
+        return;
+      }
+      if (scenarioQueue.length) {
+        showScenarioLine(scenarioQueue.shift());
+        return;
+      }
+      if (!scenarioContinueBtn.disabled) {
+        finishScenarioQueue();
+      }
+    }
+
+    function renderScenarioNode(snap) {
+      const node = snap.node;
+      if (!node) return;
+      scenarioScene = node.scene || 'street-traffic';
+      scenarioDialog.className = '';
+      updateScenarioHud(snap);
+      renderScenarioLog(snap.history);
+      if (node.kind === 'talk') {
+        playScenarioQueue(snap.lines, 'advance');
+        scenarioEngine.finishTalk();
+      } else {
+        playScenarioQueue(snap.lines, 'choices');
+      }
+    }
+
+    function onScenarioChoice(optionId) {
+      if (!scenarioEngine) return;
+      const outcome = scenarioEngine.choose(optionId);
+      if (outcome.error) return;
+
+      const result = outcome.result;
+      scenarioDialog.className = 'tone-' + (result === 'correct' ? 'correct' : result === 'unsafe' ? 'unsafe' : 'incorrect');
+      updateScenarioHud(outcome.snapshot);
+      renderScenarioLog(outcome.snapshot.history);
+      scenarioPulse = 1;
+      if (result === 'correct') playTone(660, 0.12, 'square', 0.08);
+      else playTone(110, 0.16, 'sawtooth', 0.07);
+
+      playScenarioQueue(outcome.reply || [], result === 'correct' ? 'advance' : 'retry');
+    }
+
+    function goScenarioNext() {
+      if (!scenarioEngine) return;
+      const result = scenarioEngine.nextStep();
+      if (result.error) return;
+      if (result.complete) {
+        stopScenarioMusic();
+        showScenarioResults(result.report);
+        if (window.CoachPulse) CoachPulse.speakScenario('Scenario complete. Open LOG anytime on a replay to review the conversation.');
+        return;
+      }
+      if (result.snapshot) renderScenarioNode(result.snapshot);
+    }
+
+    function showScenarioResults(report) {
+      scenarioScene = report.scene || 'ambulance';
+      const completedLines = report.completed.length
+        ? report.completed.map((step) => step.title + (step.firstTry ? ' (clean)' : ' (retry)')).join(', ')
+        : 'None';
+      const mistakeLines = report.mistakes.length
+        ? report.mistakes.map((item) => '<p class="mistake">- ' + escapeHtml(item.title) + ': ' + escapeHtml(item.choice) + '</p>').join('')
+        : '<p>No unsafe or incorrect lines. Sharp talking.</p>';
+      const learnLines = report.learningPoints.map((line) => '<p>- ' + escapeHtml(line) + '</p>').join('');
+      const logPreview = (report.history || []).slice(-8).map((entry) =>
+        '<p><strong>' + escapeHtml(entry.speaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>'
+      ).join('');
+
+      scenarioReport.innerHTML =
+        '<p>HERO: ' + escapeHtml(playerName) + '</p>' +
+        '<p>XP: ' + report.xp + ' / ' + report.maxXp + '</p>' +
+        '<p>STEPS DONE: ' + escapeHtml(completedLines) + '</p>' +
+        '<p>MISTAKES:</p>' + mistakeLines +
+        '<p>LEARNING POINTS:</p>' + learnLines +
+        '<p>RECENT LOG:</p>' + logPreview +
+        '<p>This is practice. Take a certified CPR course for real skills.</p>';
+
+      setState(STATE.SCENARIO_RESULTS);
+    }
+
+    const SCENARIO_TUNE = [220, 277, 330, 277, 349, 330, 277, 220];
+
+    function stopScenarioMusic() {
+      scenarioMusicOn = false;
+    }
+
+    function tickScenarioMusic(dt) {
+      if (!scenarioMusicOn || state !== STATE.SCENARIO) return;
+      scenarioMusicTimer += dt;
+      if (scenarioMusicTimer >= 280) {
+        scenarioMusicTimer = 0;
+        const freq = SCENARIO_TUNE[scenarioMusicStep % SCENARIO_TUNE.length];
+        scenarioMusicStep += 1;
+        playTone(freq, 0.12, 'square', 0.018);
+      }
+    }
+
+    function beginScenario() {
+      if (!scenarioEngine) return;
+      initAudio();
+      scenarioMusicOn = true;
+      scenarioMusicStep = 0;
+      scenarioLog.classList.add('hidden');
+      const snap = scenarioEngine.start('unconscious-adult');
+      if (!snap || !snap.node) return;
+      renderScenarioNode(snap);
+      setState(STATE.SCENARIO);
+    }
+
+    scenarioBtn.addEventListener('click', () => {
+      if (!requireHeroName()) return;
+      beginScenario();
+    });
+
+    scenarioContinueBtn.addEventListener('click', () => advanceScenarioDialogue());
+    scenarioDialog.addEventListener('click', () => advanceScenarioDialogue());
+    scenarioRestartBtn.addEventListener('click', () => beginScenario());
+    scenarioPlayAgainBtn.addEventListener('click', () => beginScenario());
+    scenarioMenuBtn.addEventListener('click', () => {
+      stopScenarioMusic();
+      setState(STATE.START);
+    });
+
+    scenarioLogBtn.addEventListener('click', () => {
+      scenarioLog.classList.toggle('hidden');
+      if (!scenarioLog.classList.contains('hidden') && scenarioEngine) {
+        renderScenarioLog(scenarioEngine.snapshot().history);
+      }
+    });
+
+    scenarioHintBtn.addEventListener('click', () => {
+      const node = scenarioEngine && scenarioEngine.currentNode();
+      if (!node) return;
+      const hintLine = { speaker: 'COACH PULSE', portrait: 'coach', text: node.hint || 'Stay with the conversation. Pick the safest line.' };
+      playScenarioQueue([hintLine].concat(scenarioQueue), scenarioAfterQueue);
+      if (window.CoachPulse) {
+        CoachPulse.explainScenarioHint(node.hint, node.hintQuestion);
+      }
     });
 
     // --- DRAWING HELPERS (Canvas rendering) ---
@@ -750,73 +1079,215 @@
       ctx.globalAlpha = 1;
     }
 
-    function drawNarrativeScene() {
-      ctx.fillStyle = '#87CEEB';
-      ctx.fillRect(0, 0, CW, CH * 0.55);
-      ctx.fillStyle = '#555';
-      ctx.fillRect(0, CH * 0.55, CW, CH * 0.45);
+    function paintWorld(now, scene) {
+      if (!CPRHero.Gfx.ready) {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, CW, CH);
+        return false;
+      }
+      CPRHero.Gfx.bg(ctx, CW, CH, scene);
+      CPRHero.Gfx.ambient(ctx, scene, now);
+      return true;
+    }
 
-      ctx.fillStyle = '#3a3a5c';
-      ctx.fillRect(60, 110, 110, 220);
-      ctx.fillRect(220, 70, 100, 260);
-      ctx.fillRect(520, 90, 130, 240);
+    function drawActor(file, index, x, feetY) {
+      const actor = CPRHero.Gfx.metrics.actor;
+      const scale = CPRHero.Gfx.metrics.scale;
+      const y = feetY - actor.h * scale;
+      CPRHero.Gfx.frame(ctx, file, index, actor.w, actor.h, x, y, scale);
+      return { x: x, y: y, headX: x + 28, headY: y + 6 };
+    }
 
-      ctx.fillStyle = '#4ecca3';
-      ctx.fillRect(130, CH * 0.55 - 48, 20, 38);
-      ctx.fillStyle = '#ffccaa';
-      ctx.fillRect(135, CH * 0.55 - 62, 14, 14);
+    function drawPatientSprite(now, x, gasping, compressed) {
+      const patient = CPRHero.Gfx.metrics.patient;
+      const scale = CPRHero.Gfx.metrics.scale;
+      const feet = CPRHero.Gfx.metrics.ground;
+      const y = feet - patient.h * scale + 14;
+      CPRHero.Gfx.frame(
+        ctx, 'patient.png',
+        CPRHero.Gfx.patientIndex(now, gasping, compressed),
+        patient.w, patient.h, x, y, scale
+      );
+    }
 
-      ctx.fillStyle = '#888';
-      ctx.fillRect(430, CH * 0.55 - 8, 50, 14);
-      ctx.fillStyle = '#ffccaa';
-      ctx.fillRect(468, CH * 0.55 - 16, 14, 12);
-
-      ctx.fillStyle = '#ff4444';
-      ctx.font = '18px "Press Start 2P"';
-      ctx.textAlign = 'center';
-      ctx.fillText('!', 475, CH * 0.55 - 26);
+    function drawNarrativeScene(now) {
+      if (!paintWorld(now, 'street')) return;
+      const feet = CPRHero.Gfx.metrics.ground;
+      const G = CPRHero.Gfx;
+      drawActor('rick.png', G.standIndex(now, false, true, false), 36, feet);
+      drawActor('hero.png', G.standIndex(now, false, true, false), 168, feet);
+      drawPatientSprite(now, 400, false, false);
+      drawActor('maya.png', G.standIndex(now, false, true, false), 620, feet);
     }
 
     function drawPlayingScene(now) {
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, CW, CH);
-
-      ctx.fillStyle = '#2a2a4e';
-      ctx.fillRect(0, CH * 0.72, CW, CH * 0.28);
-
+      const feet = CPRHero.Gfx.metrics.ground;
+      const G = CPRHero.Gfx;
+      if (paintWorld(now, 'close')) {
+        drawPatientSprite(now, 250, false, true);
+        const cpr = G.metrics.cpr;
+        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, 70, feet - cpr.h * G.metrics.scale, G.metrics.scale);
+        drawActor('rick.png', G.standIndex(now, true, false, true), 560, feet);
+      }
       drawTimingRing();
       drawHUD();
       drawHitFeedback(now);
     }
 
+    function drawSpeechTick(x, y, active) {
+      if (!active) return;
+      ctx.fillStyle = '#fff8e0';
+      ctx.fillRect(x, y - 22, 22, 12);
+      ctx.fillRect(x + 6, y - 10, 6, 6);
+      ctx.strokeStyle = '#201018';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y - 22, 22, 12);
+    }
+
+    function paintScenarioPortrait(now) {
+      if (!scenarioPortraitArt || !CPRHero.Gfx.ready) return;
+      const p = scenarioPortraitArt.getContext('2d');
+      p.imageSmoothingEnabled = false;
+      p.clearRect(0, 0, 64, 64);
+      p.fillStyle = '#140c28';
+      p.fillRect(0, 0, 64, 64);
+      const who = scenarioSpeakerId;
+      const talk = scenarioTalking;
+      const G = CPRHero.Gfx;
+      const actor = G.metrics.actor;
+      if (who === 'hero') G.bust(p, 'hero.png', G.standIndex(now, talk, false, false), actor.w);
+      else if (who === 'rick') G.bust(p, 'rick.png', G.standIndex(now, talk, false, scenarioScene === 'calling'), actor.w);
+      else if (who === 'maya') G.bust(p, 'maya.png', G.standIndex(now, talk, false, false), actor.w);
+      else if (who === 'patient') {
+        const sheet = G.metrics.patient;
+        const index = G.patientIndex(now, true, false);
+        G.blit(p, 'patient.png', index * sheet.w, 0, 32, 32, 0, 0, 64, 64);
+      } else if (who === 'aed') {
+        G.blit(p, 'props.png', 0, 2, 30, 22, 10, 14, 44, 32);
+      } else {
+        G.bust(p, 'coach.png', G.coachIndex(now, talk || who === 'dispatch'), G.metrics.coach.w);
+      }
+    }
+
+    function drawScenarioScene(now) {
+      const talk = scenarioTalking;
+      const who = scenarioSpeakerId;
+      const G = CPRHero.Gfx;
+      const close = scenarioScene !== 'street-traffic';
+      const gasping = scenarioScene === 'check-breathing' || scenarioScene === 'cpr';
+      const compressing = scenarioScene === 'cpr' || scenarioScene === 'aed';
+      const onPhone = scenarioScene === 'calling' || scenarioScene === 'check-breathing' || scenarioScene === 'cpr';
+      const feet = G.metrics.ground;
+
+      if (!paintWorld(now, close ? 'close' : 'street')) return;
+
+      const patientX = close ? 300 : 390;
+      drawPatientSprite(now, patientX, gasping, compressing);
+
+      const heroTalk = talk && who === 'hero';
+      let heroHead = { headX: 200, headY: 120 };
+      if (compressing) {
+        const cpr = G.metrics.cpr;
+        const y = feet - cpr.h * G.metrics.scale;
+        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, 150, y, G.metrics.scale);
+        heroHead = { headX: 190, headY: y + 8 };
+      } else if (close) {
+        heroHead = drawActor('hero.png', G.kneelIndex(now, heroTalk), 175, feet);
+      } else {
+        heroHead = drawActor('hero.png', G.standIndex(now, heroTalk, true, false), 155, feet);
+      }
+      drawSpeechTick(heroHead.headX, heroHead.headY, heroTalk);
+
+      const rickTalk = talk && who === 'rick';
+      const rickHead = drawActor(
+        'rick.png',
+        G.standIndex(now, rickTalk, scenarioScene === 'street-traffic', onPhone),
+        close ? 12 : 28,
+        feet
+      );
+      drawSpeechTick(rickHead.headX, rickHead.headY, rickTalk);
+
+      const mayaAway = scenarioScene === 'calling' || scenarioScene === 'check-breathing' || scenarioScene === 'cpr';
+      if (!mayaAway) {
+        const mayaTalk = talk && who === 'maya';
+        const holding = scenarioScene === 'aed' || scenarioScene === 'ambulance';
+        const mayaX = scenarioScene === 'ambulance' ? 250 : 600;
+        const mayaFrame = holding ? 5 : G.standIndex(now, mayaTalk, false, false);
+        const mayaHead = drawActor('maya.png', mayaFrame, mayaX, feet);
+        drawSpeechTick(mayaHead.headX, mayaHead.headY, mayaTalk);
+        if (holding) {
+          G.blit(ctx, 'props.png', 0, 2, 30, 22, mayaX + 70, feet - 78, 54, 40);
+        }
+      }
+
+      if (scenarioScene === 'ambulance') {
+        const amb = G.metrics.amb;
+        G.frame(ctx, 'ambulance.png', G.ambIndex(now), amb.w, amb.h, 470, feet - 36, 2);
+        const medicTalk = talk && (who === 'dispatch' || who === 'coach');
+        const medicFrame = Math.floor(now / 900) % 6 === 0 ? 5 : G.standIndex(now, medicTalk, false, false);
+        drawActor('medic.png', medicFrame, 390, feet);
+      }
+
+      paintScenarioPortrait(now);
+
+      ctx.fillStyle = 'rgba(8, 6, 20, 0.72)';
+      ctx.fillRect(CENTER_X - 168, 8, 336, 18);
+      ctx.fillStyle = '#c9b8ff';
+      ctx.font = '8px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.fillText('8TH STREET  •  DIALOGUE MODE', CENTER_X, 21);
+      if (scenarioPulse > 0) {
+        ctx.globalAlpha = scenarioPulse * 0.8;
+        ctx.strokeStyle = '#4ecca3';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, CW - 20, CH - 20);
+        ctx.globalAlpha = 1;
+      }
+    }
+
     function drawWinAnimation(now) {
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, CW, CH);
+      const G = CPRHero.Gfx;
+      const feet = G.ready ? G.metrics.ground : 320;
+      if (!paintWorld(now, 'close')) {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, CW, CH);
+      }
 
       const elapsed = now - winAnimStart;
       const progress = Math.min(1, elapsed / 2000);
-      const ambX = -200 + progress * (CW / 2 + 120);
-
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(ambX, CH * 0.62, 180, 56);
-      ctx.fillStyle = '#cc0000';
-      ctx.fillRect(ambX + 10, CH * 0.62 + 10, 160, 18);
+      const ambX = -240 + progress * 520;
+      if (G.ready) {
+        const amb = G.metrics.amb;
+        G.frame(ctx, 'ambulance.png', G.ambIndex(now), amb.w, amb.h, ambX, feet - 30, 2);
+        drawActor('hero.png', G.standIndex(now, false, false, false), 250, feet);
+        const medicFrame = progress > 0.65 ? 5 : G.standIndex(now, false, false, false);
+        drawActor('medic.png', medicFrame, Math.min(ambX + 230, 430), feet);
+        drawPatientSprite(now, 80, false, false);
+      }
 
       ctx.fillStyle = '#4ecca3';
       ctx.font = '10px "Press Start 2P"';
       ctx.textAlign = 'center';
-      ctx.fillText('SAVED!', CENTER_X, CH * 0.35);
-
-      drawPixelHeart(CENTER_X, CENTER_Y, 56, '#4ecca3');
+      ctx.fillText('SAVED!', CENTER_X, 48);
     }
 
     function render(now) {
       ctx.clearRect(0, 0, CW, CH);
+      if (CPRHero.Gfx) CPRHero.Gfx.prep(ctx);
 
-      if (state === STATE.NARRATIVE) drawNarrativeScene();
-      else if (state === STATE.PLAYING) drawPlayingScene(now);
+      if (state === STATE.NARRATIVE) drawNarrativeScene(now);
+      else if (state === STATE.PLAYING || state === STATE.TRIVIA) drawPlayingScene(now);
       else if (state === STATE.WIN) drawWinAnimation(now);
-      else {
+      else if (state === STATE.SCENARIO || state === STATE.SCENARIO_RESULTS) drawScenarioScene(now);
+      else if (CPRHero.Gfx.ready) {
+        const feet = CPRHero.Gfx.metrics.ground;
+        const G = CPRHero.Gfx;
+        paintWorld(now, 'street');
+        drawActor('rick.png', G.standIndex(now, false, false, false), 40, feet);
+        drawActor('hero.png', G.standIndex(now, false, false, false), 180, feet);
+        drawPatientSprite(now, 390, false, false);
+        drawActor('maya.png', G.standIndex(now, false, false, false), 620, feet);
+      } else {
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(0, 0, CW, CH);
         drawPixelHeart(CENTER_X, CENTER_Y, 70, '#e94560');
@@ -829,6 +1300,12 @@
     function gameLoop(timestamp) {
       const dt = timestamp - lastFrame;
       lastFrame = timestamp;
+
+      if (state === STATE.SCENARIO || state === STATE.SCENARIO_RESULTS) {
+        scenarioPulse = Math.max(0, scenarioPulse - dt / 400);
+        tickScenarioTypewriter(dt);
+        tickScenarioMusic(dt);
+      }
 
       if (state === STATE.PLAYING) {
         remainingMs -= dt;
@@ -848,10 +1325,12 @@
     // --- BOOTSTRAP: start the engine when page loads ---
     
     async function loadGameContent() {
-      const [triviaData, storyData, coachData] = await Promise.all([
+      const [triviaData, storyData, coachData, scenarioData] = await Promise.all([
         fetch('/data/trivia.json').then((r) => r.json()),
         fetch('/data/story.json').then((r) => r.json()),
-        fetch('/data/coach.json').then((r) => r.json())
+        fetch('/data/coach.json').then((r) => r.json()),
+        fetch('/data/scenarios.json').then((r) => r.json()),
+        CPRHero.Gfx.load()
       ]);
 
       TRIVIA_BANK = triviaData.questions;
@@ -859,6 +1338,7 @@
       NARRATIVE_BEATS = storyData.beats;
       call911Prompt = storyData.call911Prompt || call911Prompt;
       window.CoachPulse = CPRHero.createCoach(coachData);
+      scenarioEngine = CPRHero.createScenarioEngine(scenarioData);
     }
 
     loadGameContent().then(() => {

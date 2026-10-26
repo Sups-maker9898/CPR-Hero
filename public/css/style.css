@@ -135,6 +135,15 @@
 
     .overlay.active { display: flex; }
 
+    /* Title, story, and win sit over the pixel scene instead of covering it. */
+    #start-overlay.active,
+    #narrative-overlay.active,
+    #win-overlay.active {
+      justify-content: flex-end;
+      background: linear-gradient(to bottom, rgba(10, 12, 32, 0.04) 0%, rgba(10, 12, 32, 0.18) 42%, rgba(8, 10, 24, 0.94) 64%);
+      padding-bottom: 18px;
+    }
+
     .overlay h2 {
       font-size: clamp(10px, 2.5vw, 16px);
       color: var(--accent);
@@ -408,6 +417,179 @@
 
     .hidden { display: none !important; }
 
+    #start-overlay .retro-btn.secondary {
+      width: min(300px, 90%);
+    }
+
+    #scenario-overlay.scenario-vn {
+      justify-content: flex-end;
+      overflow: hidden;
+      gap: 8px;
+      background: linear-gradient(to bottom, rgba(10, 12, 32, 0.08) 0%, rgba(10, 12, 32, 0.2) 42%, rgba(8, 10, 24, 0.92) 58%);
+      padding: 8px 10px 10px;
+    }
+
+    #scenario-results-overlay {
+      justify-content: flex-start;
+      overflow-y: auto;
+      gap: 10px;
+      background: rgba(10, 12, 32, 0.9);
+      padding-top: 12px;
+    }
+
+    #scenario-hud {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      font-size: clamp(6px, 1.4vw, 8px);
+      color: var(--yellow);
+      border: 2px solid #2a1a5c;
+      background: rgba(12, 8, 32, 0.92);
+      padding: 8px 10px;
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    #scenario-xp { color: var(--green); }
+    #scenario-step-label { color: #c9b8ff; margin-left: auto; }
+    #scenario-log-btn {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 8px 10px;
+      width: auto;
+      font-size: clamp(5px, 1.1vw, 7px);
+    }
+
+    #scenario-log {
+      width: 100%;
+      max-height: 28%;
+      overflow-y: auto;
+      text-align: left;
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.7;
+      padding: 8px;
+      border: 2px solid var(--green);
+      background: rgba(6, 10, 20, 0.95);
+      color: #cde;
+    }
+
+    #scenario-log p { margin-bottom: 6px; }
+    #scenario-log .log-you { color: var(--accent); }
+    #scenario-log .log-coach { color: var(--green); }
+    #scenario-log .log-dispatch { color: var(--yellow); }
+    #scenario-log .log-unsafe { color: var(--red); }
+
+    #scenario-dialog {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      align-items: stretch;
+      border: 3px solid #e8d5a3;
+      background: #081018;
+      box-shadow: 6px 6px 0 #000, inset 0 0 0 2px #3a2a10;
+      padding: 8px;
+      min-height: 92px;
+    }
+
+    #scenario-portrait {
+      width: 96px;
+      min-width: 96px;
+      height: 96px;
+      border: 3px solid #fff;
+      background: #140c28;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+
+    #scenario-portrait-art {
+      width: 96px;
+      height: 96px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #scenario-portrait.talking {
+      animation: portraitTalk 0.18s steps(2) infinite;
+    }
+
+    @keyframes portraitTalk {
+      0%, 100% { filter: none; }
+      50% { filter: brightness(1.25); }
+    }
+
+    #scenario-speaker {
+      font-size: clamp(6px, 1.4vw, 8px);
+      color: var(--yellow);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      text-align: left;
+    }
+
+    #scenario-line {
+      font-size: clamp(6px, 1.4vw, 8px);
+      line-height: 1.8;
+      color: #f4f0e0;
+      text-align: left;
+      min-height: 3.6em;
+    }
+
+    #scenario-dialog.tone-correct { border-color: var(--green); }
+    #scenario-dialog.tone-unsafe { border-color: var(--red); }
+    #scenario-dialog.tone-incorrect { border-color: var(--yellow); }
+
+    #scenario-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    #scenario-options.hidden { display: none !important; }
+
+    #scenario-options .retro-btn {
+      font-size: clamp(5px, 1.2vw, 7px);
+      line-height: 1.6;
+      text-align: left;
+      white-space: normal;
+      width: 100%;
+      background: #1a1040;
+      border-color: #c9b8ff;
+    }
+
+    #scenario-options .choice-correct { background: #1b6b42 !important; border-color: var(--green) !important; }
+    #scenario-options .choice-incorrect { background: #6b4a12 !important; border-color: var(--yellow) !important; }
+    #scenario-options .choice-unsafe { background: #6b1b1b !important; border-color: var(--red) !important; }
+
+    #scenario-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    #scenario-actions .retro-btn { flex: 1 1 120px; }
+
+    #scenario-continue-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #scenario-report {
+      font-size: clamp(6px, 1.3vw, 8px);
+      line-height: 2;
+      color: var(--green);
+      text-align: left;
+      width: min(560px, 96%);
+    }
+
+    #scenario-report .mistake { color: var(--red); }
+
     /* ==========================================================
        AI ASSISTANT PANEL (Coach Pulse — always visible)
     ========================================================== */
@@ -442,11 +624,18 @@
       border: 2px solid var(--green);
       background: #0f3460;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
+      align-items: flex-end;
+      justify-content: flex-start;
+      overflow: hidden;
       flex-shrink: 0;
       animation: avatarPulse 2.5s ease-in-out infinite;
+    }
+
+    .assistant-avatar img {
+      height: 44px;
+      width: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
 
     @keyframes avatarPulse {
@@ -742,11 +931,35 @@
         gap: 8px;
       }
 
-      #trivia-options .retro-btn {
+      #trivia-options .retro-btn,
+      #scenario-options .retro-btn {
         font-size: 8px;
         text-align: left;
         width: 100%;
         min-height: 52px;
+      }
+
+      #scenario-actions .retro-btn {
+        min-height: 48px;
+        width: auto;
+        flex: 1 1 46%;
+      }
+
+      #scenario-line,
+      #scenario-report {
+        font-size: 8px;
+      }
+
+      #scenario-overlay.scenario-vn {
+        justify-content: flex-end;
+        padding-bottom: 8px;
+      }
+
+      #scenario-portrait,
+      #scenario-portrait-art {
+        width: 64px;
+        min-width: 64px;
+        height: 64px;
       }
 
       #trivia-question {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpr-hero-v2';
+const CACHE_NAME = 'cpr-hero-v6';
 const PRECACHE = [
   '/',
   '/index.html',
@@ -7,10 +7,25 @@ const PRECACHE = [
   '/js/rhythm.js',
   '/js/trivia.js',
   '/js/coach.js',
+  '/js/sprites.js',
+  '/js/scenario.js',
   '/js/game.js',
+  '/img/street.png',
+  '/img/close.png',
+  '/img/fx.png',
+  '/img/hero.png',
+  '/img/hero-cpr.png',
+  '/img/rick.png',
+  '/img/maya.png',
+  '/img/medic.png',
+  '/img/patient.png',
+  '/img/coach.png',
+  '/img/props.png',
+  '/img/ambulance.png',
   '/data/trivia.json',
   '/data/story.json',
   '/data/coach.json',
+  '/data/scenarios.json',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'

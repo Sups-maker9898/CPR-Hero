@@ -6,6 +6,7 @@ const sqlite3 = require('sqlite3').verbose(); // 1. Import the database library
 
 const app = express();
 const PORT = 3000;
+const GEMINI_COACH_URL = process.env.GEMINI_COACH_URL || 'http://127.0.0.1:8081';
 
 // Middleware
 app.use(cors());
@@ -61,6 +62,28 @@ app.post('/api/score', (req, res) => {
         }
         res.json({ success: true, message: "Score saved securely to the database!" });
     });
+});
+
+// Gemini Coach Pulse proxy — browser never sees the API key
+app.post('/api/coach/ask', async (req, res) => {
+    const question = typeof req.body?.question === 'string' ? req.body.question : '';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+
+    try {
+        const response = await fetch(`${GEMINI_COACH_URL}/api/coach/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question }),
+            signal: controller.signal
+        });
+        const data = await response.json().catch(() => ({}));
+        res.status(response.status).json(data);
+    } catch (err) {
+        res.status(503).json({ error: 'Gemini coach unavailable' });
+    } finally {
+        clearTimeout(timer);
+    }
 });
 
 // Fallback: serve index.html for root route (Kept from your original snippet)

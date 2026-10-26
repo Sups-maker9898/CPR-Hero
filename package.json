@@ -4,7 +4,8 @@
   "description": "CPR HERO - Interactive educational 2D retro arcade game teaching CPR rhythm",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "coach": "python/.venv/Scripts/python.exe python/coach_server.py"
   },
   "keywords": [
     "cpr",
