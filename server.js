@@ -5,7 +5,7 @@ const os = require('os');
 const sqlite3 = require('sqlite3').verbose(); // 1. Import the database library
 
 const app = express();
-const PORT = 3000;
+const PORT = 8000;
 const GEMINI_COACH_URL = process.env.GEMINI_COACH_URL || 'http://127.0.0.1:8081';
 
 // Middleware

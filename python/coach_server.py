@@ -3,7 +3,7 @@
 
 Answers typed Coach Pulse questions with OpenRouter
 (`google/gemini-2.5-flash` by default), using coach.json as game-rule
-ground truth. Runs beside Node.js (port 3000).
+ground truth. Runs beside Node.js (port 8000).
 
 From the project folder:
   python\\.venv\\Scripts\\python.exe python/coach_server.py
@@ -110,7 +110,7 @@ def ask_openrouter(question: str, system: str, api_key: str) -> str:
         headers={
             "Authorization": "Bearer %s" % api_key,
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
+            "HTTP-Referer": "http://localhost:8000",
             "X-Title": "CPR HERO Coach Pulse",
         },
     )

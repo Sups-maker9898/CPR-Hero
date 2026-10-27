@@ -33,7 +33,10 @@
 
   <!-- Leaderboard panel (Phase 1 uses local placeholder data) -->
   <div id="leaderboard-panel">
-    <h3>-- LEADERBOARD --</h3>
+    <div id="leaderboard-head">
+      <h3>-- LEADERBOARD --</h3>
+      <button type="button" id="board-play-btn" class="retro-btn">PLAY</button>
+    </div>
     <ul id="leaderboard-list">
       <li><span>Play a round to see scores here!</span><span></span></li>
     </ul>
@@ -166,6 +169,7 @@
 
   <nav id="mobile-tabbar" aria-label="Phone app screens">
     <button type="button" id="tab-game" class="mobile-tab active" aria-selected="true">PLAY</button>
+    <button type="button" id="tab-board" class="mobile-tab" aria-selected="false" aria-label="Leaderboard">BOARD</button>
     <button type="button" id="tab-coach" class="mobile-tab" aria-selected="false">COACH</button>
   </nav>
 

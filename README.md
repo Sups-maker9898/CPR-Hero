@@ -23,7 +23,7 @@ npm install
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:8000](http://localhost:8000) in your browser.
 
 ## Project files
 
@@ -62,7 +62,7 @@ python\.venv\Scripts\python.exe -m pip install -r python/requirements.txt
 python\.venv\Scripts\python.exe python/coach_server.py
 ```
 
-It listens on port 8081. Node.js proxies `POST /api/coach/ask` to it, so phones on the same Wi-Fi work through port 3000. Typed Coach Pulse questions use Gemini first, then Java (if running), then the built-in `coach.json` answers.
+It listens on port 8081. Node.js proxies `POST /api/coach/ask` to it, so phones on the same Wi-Fi work through port 8000. Typed Coach Pulse questions use Gemini first, then Java (if running), then the built-in `coach.json` answers.
 
 ## Optional: Java Coach service
 

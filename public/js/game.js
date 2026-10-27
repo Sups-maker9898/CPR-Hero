@@ -69,8 +69,10 @@
     const touchHint = document.getElementById('touch-hint');
     const compressBtn = document.getElementById('compress-btn');
     const tabGame = document.getElementById('tab-game');
+    const tabBoard = document.getElementById('tab-board');
     const tabCoach = document.getElementById('tab-coach');
     const mobileCoachClose = document.getElementById('mobile-coach-close');
+    const boardPlayBtn = document.getElementById('board-play-btn');
 
     // --- GAME CONSTANTS (tunable rules) ---
     const BPM = 110;
@@ -155,16 +157,23 @@
     }
 
     function showMobileScreen(screen) {
-      const coach = screen === 'coach';
-      document.body.classList.toggle('mobile-coach', coach);
-      tabGame.classList.toggle('active', !coach);
-      tabCoach.classList.toggle('active', coach);
-      tabGame.setAttribute('aria-selected', String(!coach));
-      tabCoach.setAttribute('aria-selected', String(coach));
+      document.body.classList.toggle('mobile-coach', screen === 'coach');
+      document.body.classList.toggle('mobile-board', screen === 'board');
+      tabGame.classList.toggle('active', screen === 'game');
+      tabBoard.classList.toggle('active', screen === 'board');
+      tabCoach.classList.toggle('active', screen === 'coach');
+      tabGame.setAttribute('aria-selected', String(screen === 'game'));
+      tabBoard.setAttribute('aria-selected', String(screen === 'board'));
+      tabCoach.setAttribute('aria-selected', String(screen === 'coach'));
+      if (screen === 'board') {
+        fetchGlobalLeaderboard().then(renderLeaderboard).catch(() => {});
+      }
     }
 
     tabGame.addEventListener('click', () => showMobileScreen('game'));
+    tabBoard.addEventListener('click', () => showMobileScreen('board'));
     tabCoach.addEventListener('click', () => showMobileScreen('coach'));
+    boardPlayBtn.addEventListener('click', () => showMobileScreen('game'));
     mobileCoachClose.addEventListener('click', () => showMobileScreen('game'));
 
     // --- SIMPLE WEB AUDIO BEEPS (no external sound files in Phase 1) ---
