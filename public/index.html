@@ -43,6 +43,9 @@
     <div id="canvas-stage">
     <!-- HTML5 Canvas = our 2D drawing board -->
     <canvas id="game-canvas" width="800" height="600" tabindex="0" aria-label="CPR HERO game canvas — press Spacebar or click to compress"></canvas>
+    <button type="button" id="scenario-exit-btn" class="retro-btn secondary" aria-label="Main Screen">
+      <span class="back-arrow" aria-hidden="true"></span>MAIN SCREEN
+    </button>
 
     <!-- START / LOGIN OVERLAY -->
     <div id="start-overlay" class="overlay active">
@@ -91,11 +94,17 @@
 
     <!-- EMERGENCY SCENARIO MODE — dialogue visual novel -->
     <div id="scenario-overlay" class="overlay scenario-vn">
+      <div id="scenario-body">
       <div id="scenario-hud">
         <span id="scenario-xp">XP 0</span>
         <span id="scenario-progress">STEP 1 / 6</span>
         <span id="scenario-step-label">SCENE</span>
         <button type="button" id="scenario-log-btn" class="retro-btn secondary">LOG</button>
+      </div>
+      <div id="scenario-exit-confirm" class="hidden" role="alertdialog" aria-label="Leave scenario">
+        <p>Are you sure?</p>
+        <button type="button" id="scenario-exit-yes" class="retro-btn">YES</button>
+        <button type="button" id="scenario-exit-no" class="retro-btn secondary">NO</button>
       </div>
       <div id="scenario-log" class="hidden" aria-label="Conversation history"></div>
       <div id="scenario-dialog">
@@ -112,6 +121,7 @@
         <button type="button" id="scenario-continue-btn" class="retro-btn">CONTINUE</button>
         <button type="button" id="scenario-hint-btn" class="retro-btn secondary">HINT</button>
         <button type="button" id="scenario-restart-btn" class="retro-btn secondary">RESTART</button>
+      </div>
       </div>
     </div>
 

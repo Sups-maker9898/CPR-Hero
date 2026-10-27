@@ -41,6 +41,10 @@
     const scenarioRestartBtn = document.getElementById('scenario-restart-btn');
     const scenarioHintBtn = document.getElementById('scenario-hint-btn');
     const scenarioLogBtn = document.getElementById('scenario-log-btn');
+    const scenarioExitBtn = document.getElementById('scenario-exit-btn');
+    const scenarioExitConfirm = document.getElementById('scenario-exit-confirm');
+    const scenarioExitYes = document.getElementById('scenario-exit-yes');
+    const scenarioExitNo = document.getElementById('scenario-exit-no');
     const scenarioLog = document.getElementById('scenario-log');
     const scenarioPortrait = document.getElementById('scenario-portrait');
     const scenarioPortraitArt = document.getElementById('scenario-portrait-art');
@@ -147,7 +151,6 @@
     // Detect touch devices for control hints
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (isTouchDevice) {
-      touchHint.style.display = 'block';
       compressBtn.textContent = 'COMPRESS — TAP';
     }
 
@@ -224,6 +227,7 @@
     // --- STATE MACHINE ---
     function setState(newState) {
       state = newState;
+      document.body.classList.toggle('in-scenario', newState === STATE.SCENARIO);
 
       switch (newState) {
         case STATE.START:
@@ -319,6 +323,7 @@
     function updateCompressControls() {
       const playing = state === STATE.PLAYING;
       compressBtn.classList.toggle('visible', playing);
+      touchHint.style.display = (isTouchDevice && playing) ? 'block' : 'none';
       if (playing) {
         canvas.focus({ preventScroll: true });
       }
@@ -879,6 +884,7 @@
       scenarioMusicOn = true;
       scenarioMusicStep = 0;
       scenarioLog.classList.add('hidden');
+      scenarioExitConfirm.classList.add('hidden');
       const snap = scenarioEngine.start('unconscious-adult');
       if (!snap || !snap.node) return;
       renderScenarioNode(snap);
@@ -897,6 +903,23 @@
     scenarioMenuBtn.addEventListener('click', () => {
       stopScenarioMusic();
       setState(STATE.START);
+    });
+
+    scenarioExitBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      scenarioExitConfirm.classList.remove('hidden');
+    });
+
+    scenarioExitYes.addEventListener('click', (e) => {
+      e.stopPropagation();
+      scenarioExitConfirm.classList.add('hidden');
+      stopScenarioMusic();
+      setState(STATE.START);
+    });
+
+    scenarioExitNo.addEventListener('click', (e) => {
+      e.stopPropagation();
+      scenarioExitConfirm.classList.add('hidden');
     });
 
     scenarioLogBtn.addEventListener('click', () => {
