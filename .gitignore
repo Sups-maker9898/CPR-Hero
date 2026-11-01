@@ -14,3 +14,5 @@ leaderboard-backup.db
 
 # Cloudflare local development files
 .wrangler/
+# Local SQLite database
+leaderboard.db
