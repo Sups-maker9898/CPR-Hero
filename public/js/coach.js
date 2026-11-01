@@ -14,15 +14,12 @@ CPRHero.createCoach = function createCoach(data) {
   const narrativeHints = data.narrativeHints || [];
 
   const GEMINI_COACH_URL = '/api/coach/ask';
-  const JAVA_COACH_URL = `${location.protocol}//${location.hostname}:8080/api/coach/ask`;
   const GEMINI_TIMEOUT_MS = 12000;
-  const JAVA_TIMEOUT_MS = 1500;
   const COACH_RETRY_MS = 30000;
 
   let tutorialStarted = false;
   let lastContextMessage = '';
   let geminiUnavailableUntil = 0;
-  let javaUnavailableUntil = 0;
 
   async function askCoach(url, question, timeoutMs) {
     const controller = new AbortController();
@@ -53,15 +50,6 @@ CPRHero.createCoach = function createCoach(data) {
     }
   }
 
-  async function askJavaCoach(question) {
-    if (location.protocol !== 'http:' || Date.now() < javaUnavailableUntil) return null;
-    try {
-      return await askCoach(JAVA_COACH_URL, question, JAVA_TIMEOUT_MS);
-    } catch (err) {
-      javaUnavailableUntil = Date.now() + COACH_RETRY_MS;
-      return null;
-    }
-  }
 
   function resolveAnswer(entry) {
     if (entry.answerKey) return (topics[entry.answerKey] || '') + (entry.extra || '');
@@ -125,7 +113,7 @@ CPRHero.createCoach = function createCoach(data) {
     addMessage(trimmed, 'user');
     inputEl.value = '';
     showTyping(true);
-    const answer = (await askGeminiCoach(trimmed)) || (await askJavaCoach(trimmed)) || findAnswer(trimmed);
+    const answer = (await askGeminiCoach(trimmed)) || findAnswer(trimmed);
     await reply(answer, 400 + Math.random() * 300);
   }
 

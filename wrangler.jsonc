@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cpr-hero-app",
+  "main": "cloudflare-worker.js",
+  "compatibility_date": "2026-10-30",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cpr-hero-db",
+      "database_id": "28dad9b3-2af9-420f-a15e-842503ff3efa"
+    }
+  ]
+}

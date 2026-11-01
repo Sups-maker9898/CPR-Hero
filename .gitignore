@@ -6,3 +6,11 @@ __pycache__/
 .venv/
 venv/
 python/.venv/
+# Local database backup
+leaderboard-backup.db
+
+# Local Cloudflare development secrets
+.dev.vars
+
+# Cloudflare local development files
+.wrangler/

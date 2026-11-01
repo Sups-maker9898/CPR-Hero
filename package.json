@@ -20,5 +20,8 @@
     "sqlite3": "^6.0.1"
   },
   "author": "",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "wrangler": "^4.156.0"
+  }
 }
