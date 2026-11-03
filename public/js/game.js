@@ -72,6 +72,7 @@
     const leaderboardList = document.getElementById('leaderboard-list');
     const touchHint = document.getElementById('touch-hint');
     const compressBtn = document.getElementById('compress-btn');
+    const timingLive = document.getElementById('timing-live');
     const tabGame = document.getElementById('tab-game');
     const tabBoard = document.getElementById('tab-board');
     const tabCoach = document.getElementById('tab-coach');
@@ -133,6 +134,11 @@
     let ringProgress = 0;
     let beatPulse = 0;
     let lastHitFeedback = { text: '', color: '', time: 0 };
+
+    // Interval-rate wisps. Separate from the metronome hit streak that scores points.
+    let timingTrack = { lastAt: null, samples: [], combo: 0, bestCombo: 0 };
+    let vaporWisps = [];
+    const VAPOR_LIFE = 1100;
 
     // Trivia tracking
     let usedTriviaIndices = [];
@@ -205,6 +211,12 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
+    function playTimingCue(judgment) {
+      if (judgment === 'perfect') playTone(988, 0.06, 'square', 0.035);
+      else if (judgment === 'fast') playTone(146, 0.08, 'square', 0.04);
+      else if (judgment === 'slow') playTone(220, 0.1, 'triangle', 0.045);
+    }
+
     // --- OVERLAY HELPERS ---
     function showOverlay(name) {
       Object.values(overlays).forEach(o => o.classList.remove('active'));
@@ -217,6 +229,7 @@
 
     // --- SCORE MATH ---
     function calculateFinalScore(timeBonusSeconds) {
+      // Rhythm combo is on-screen coaching only. It is not added here.
       return compressionPoints + (correctTrivia * 50) + (timeBonusSeconds * 5);
     }
 
@@ -335,6 +348,7 @@
       currentTriviaIndex = -1;
       narrativeIndex = 0;
       lastHitFeedback = { text: '', color: '', time: 0 };
+      resetTimingIndicator();
     }
 
     // --- INTRO STORY ---
@@ -380,6 +394,7 @@
       currentBeatIndex = 0;
       beatInputHandled = false;
       ringProgress = 0;
+      armTimingWindow();
       updateCompressControls();
       canvas.focus({ preventScroll: true });
     }
@@ -468,6 +483,96 @@
       const beatTime = getExpectedBeatTime(currentBeatIndex);
       ringProgress = CPRHero.rhythm.nextRingProgress(now, beatTime, BEAT_INTERVAL);
       beatPulse = Math.max(0, beatPulse - 0.08);
+    }
+
+    // --- COMPRESSION-RATE WISPS (same presses as scoring) ---
+    function spawnVapor(judgment, now) {
+      const copy = {
+        perfect: { text: 'PERFECT', color: '#c8ffe9' },
+        fast: { text: 'TOO FAST', color: '#ffc1c1' },
+        slow: { text: 'TOO SLOW', color: '#ffe3ad' }
+      }[judgment];
+      if (!copy) return;
+      vaporWisps.push({
+        text: copy.text,
+        color: copy.color,
+        born: now,
+        drift: (Math.random() - 0.5) * 14
+      });
+      if (vaporWisps.length > 5) vaporWisps.shift();
+      if (timingLive) timingLive.textContent = copy.text;
+    }
+
+    function drawVaporWisps(now) {
+      if (!vaporWisps.length) return;
+      const keep = [];
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '8px "Press Start 2P"';
+
+      for (let i = 0; i < vaporWisps.length; i++) {
+        const wisp = vaporWisps[i];
+        const age = (now - wisp.born) / VAPOR_LIFE;
+        if (age >= 1) continue;
+        keep.push(wisp);
+
+        const rise = age * 58;
+        const fadeIn = age < 0.1 ? age / 0.1 : 1;
+        const fadeOut = Math.pow(1 - age, 1.65);
+        const alpha = fadeIn * fadeOut;
+        const sway = Math.sin(age * Math.PI) * wisp.drift * age;
+        const pop = age < 0.14 ? 0.65 + (age / 0.14) * 0.35 : 1;
+        const x = CENTER_X + sway;
+        const y = CENTER_Y - 10 - rise;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(pop, pop);
+        ctx.globalAlpha = alpha * 0.28;
+        ctx.fillStyle = wisp.color;
+        ctx.fillText(wisp.text, 0, -6);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#12060e';
+        ctx.fillText(wisp.text, 1, 1);
+        ctx.fillStyle = wisp.color;
+        ctx.fillText(wisp.text, 0, 0);
+        ctx.globalAlpha = alpha * 0.45;
+        for (let s = 0; s < 3; s++) {
+          const sx = Math.sin(age * 7 + s * 1.7) * (5 + s * 3);
+          const sy = -8 - age * 22 - s * 5;
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+        ctx.restore();
+      }
+
+      vaporWisps = keep;
+      ctx.restore();
+    }
+
+    function resetTimingIndicator() {
+      timingTrack = { lastAt: null, samples: [], combo: 0, bestCombo: 0 };
+      vaporWisps = [];
+      if (timingLive) timingLive.textContent = '';
+    }
+
+    function armTimingWindow() {
+      timingTrack.lastAt = null;
+      timingTrack.samples = [];
+    }
+
+    function noteCompressionTiming(now) {
+      if (!CPRHero.rhythm || !CPRHero.rhythm.recordCompression) return;
+      const next = CPRHero.rhythm.recordCompression(timingTrack, now);
+      timingTrack = {
+        lastAt: next.lastAt,
+        samples: next.samples,
+        combo: next.combo,
+        bestCombo: next.bestCombo
+      };
+      if (next.judgment === 'first') return;
+      spawnVapor(next.judgment, now);
+      playTimingCue(next.judgment);
     }
 
     // --- TRIVIA SAFETY NET ---
@@ -592,6 +697,7 @@
     async function endGame(didWin) {
       const timeBonus = didWin ? Math.floor(remainingMs / 1000) : 0;
       const finalScore = calculateFinalScore(timeBonus);
+      const bestRhythmCombo = timingTrack.bestCombo;
 
       const analytics = {
         perfectCompressions,
@@ -617,6 +723,7 @@
         <p>Misses: ${misses}</p>
         <p>Trivia Saves: ${correctTrivia} (x50)</p>
         <p>2x Multiplier Perfects: ${streakMultiplierPerfects}</p>
+        <p>Best Rhythm Combo: ${bestRhythmCombo}</p>
         <p>Time Bonus: ${timeBonus}s (x5)</p>
         <p>${didWin ? 'STATUS: RESCUED!' : 'STATUS: GAME OVER'}</p>
       `;
@@ -628,7 +735,9 @@
     function handleCompress() {
       if (state !== STATE.PLAYING) return;
       initAudio();
-      evaluateInput(performance.now());
+      const now = performance.now();
+      evaluateInput(now);
+      noteCompressionTiming(now);
     }
 
     function handleGameplayKey(e) {
@@ -1161,7 +1270,7 @@
 
       ctx.fillStyle = '#f5c518';
       ctx.fillText(isTouchDevice ? 'TAP TO COMPRESS' : 'SPACEBAR TO COMPRESS', CENTER_X, CH - 28);
-      ctx.fillText(`${BPM} BPM`, CENTER_X, CH - 92);
+      ctx.fillText(`BEAT ${BPM}`, CENTER_X, CH - 92);
     }
 
     function drawHitFeedback(now) {
@@ -1254,6 +1363,7 @@
         drawActor('rick.png', G.standIndex(now, true, false, true), 560, feet);
       }
       drawTimingRing();
+      drawVaporWisps(now);
       drawHUD();
       drawHitFeedback(now);
     }

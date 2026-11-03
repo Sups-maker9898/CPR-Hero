@@ -429,7 +429,8 @@
 
     .hidden { display: none !important; }
 
-    #countdown-announce {
+    #countdown-announce,
+    #timing-live {
       position: absolute;
       width: 1px;
       height: 1px;
