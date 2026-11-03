@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpr-hero-v6';
+const CACHE_NAME = 'cpr-hero-v7';
 const PRECACHE = [
   '/',
   '/index.html',

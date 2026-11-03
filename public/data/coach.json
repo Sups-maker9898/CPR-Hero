@@ -34,7 +34,8 @@
   ],
   "stateTips": {
     "START": "Enter your hero name and press START MISSION. I'll stay here to help you the whole game!",
-    "NARRATIVE": "Read each story beat. When you see TAP TO CALL 911, press it — that starts the 2-minute rescue timer!",
+    "NARRATIVE": "Read each story beat. When you see TAP TO CALL 911, press it — a 3, 2, 1 countdown plays, then the 2-minute rescue timer starts!",
+    "COUNTDOWN": "Get ready! CPR starts the moment the countdown ends. Finger on Spacebar, or tap the screen.",
     "PLAYING": "Focus on the shrinking ring! Hit Spacebar or tap when it matches the green circle. Keep that 110 BPM rhythm steady!",
     "TRIVIA": "Take your time reading the question. Pick the safest, most correct first-aid answer. You can ask me for hints!",
     "WIN": "Amazing work! You kept the patient alive until the ambulance came. Real CPR heroes stay calm and keep going!",
@@ -56,7 +57,7 @@
     "Someone collapsed! In real life, check if they respond and shout for help.",
     "They are not responding — this is an emergency. Stay calm.",
     "Remember: safety first, then call emergency services, then CPR.",
-    "Next step: tap CALL 911 to start the timer. Compressions come right after!"
+    "Next step: tap CALL 911. A 3, 2, 1 countdown plays, then compressions start."
   ],
   "triviaCorrect": "Great job! Correct answers show you're learning real first-aid skills. Back to compressions — keep the rhythm!",
   "triviaWrong": "That one was tricky. The green highlighted button was the correct answer. Review first-aid basics and try again!",

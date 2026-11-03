@@ -61,6 +61,7 @@
     const narrativeText = document.getElementById('narrative-text');
     const narrativeBtn = document.getElementById('narrative-btn');
     const call911Btn = document.getElementById('call911-btn');
+    const countdownAnnounce = document.getElementById('countdown-announce');
     const triviaQuestion = document.getElementById('trivia-question');
     const triviaOptions = document.getElementById('trivia-options');
     const triviaLives = document.getElementById('trivia-lives');
@@ -95,6 +96,7 @@
     const STATE = {
       START: 'START',
       NARRATIVE: 'NARRATIVE',
+      COUNTDOWN: 'COUNTDOWN',
       PLAYING: 'PLAYING',
       TRIVIA: 'TRIVIA',
       WIN: 'WIN',
@@ -109,6 +111,8 @@
     let runId = 0;
     let playerName = '';
     let narrativeIndex = 0;
+    let countdownValue = 3;
+    let countdownStamp = 0;
 
     let remainingMs = GAME_DURATION_MS;
     let oxygen = 100;
@@ -240,6 +244,7 @@
     // --- STATE MACHINE ---
     function isMainGameState(gameState) {
       return gameState === STATE.NARRATIVE
+        || gameState === STATE.COUNTDOWN
         || gameState === STATE.PLAYING
         || gameState === STATE.TRIVIA
         || gameState === STATE.WIN
@@ -270,6 +275,13 @@
         case STATE.NARRATIVE:
           narrativeIndex = 0;
           showNarrativeBeat();
+          break;
+        case STATE.COUNTDOWN:
+          countdownValue = 3;
+          countdownStamp = performance.now();
+          countdownAnnounce.textContent = '3';
+          hideAllOverlays();
+          playTone(392, 0.15, 'square', 0.09);
           break;
         case STATE.PLAYING:
           hideAllOverlays();
@@ -638,6 +650,11 @@
         return;
       }
 
+      if (state === STATE.COUNTDOWN && (e.code === 'Space' || e.code === 'Enter')) {
+        e.preventDefault();
+        return;
+      }
+
       if (handleGameplayKey(e)) return;
 
       // Outside gameplay, allow normal space typing in text fields
@@ -678,7 +695,10 @@
     });
 
     narrativeBtn.addEventListener('click', advanceNarrative);
-    call911Btn.addEventListener('click', () => setState(STATE.PLAYING));
+    call911Btn.addEventListener('click', () => {
+      initAudio();
+      setState(STATE.COUNTDOWN);
+    });
 
     retryBtn.addEventListener('click', async () => {
       resetGame();
@@ -1188,6 +1208,32 @@
       );
     }
 
+    function drawCountdown(now) {
+      const age = (now - countdownStamp) % 1000;
+      const pop = 1 + Math.max(0, 1 - age / 260) * 0.28;
+
+      ctx.fillStyle = 'rgba(8, 10, 24, 0.55)';
+      ctx.fillRect(0, 0, CW, CH);
+
+      ctx.save();
+      ctx.translate(CENTER_X, CENTER_Y - 10);
+      ctx.scale(pop, pop);
+      ctx.font = '64px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#140814';
+      ctx.fillText(String(countdownValue), 6, 6);
+      ctx.fillStyle = '#e94560';
+      ctx.fillText(String(countdownValue), 0, 0);
+      ctx.restore();
+
+      ctx.font = '10px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#fff8e0';
+      ctx.fillText('GET READY', CENTER_X, CENTER_Y + 78);
+    }
+
     function drawNarrativeScene(now) {
       if (!paintWorld(now, 'street')) return;
       const feet = CPRHero.Gfx.metrics.ground;
@@ -1354,6 +1400,10 @@
       if (CPRHero.Gfx) CPRHero.Gfx.prep(ctx);
 
       if (state === STATE.NARRATIVE) drawNarrativeScene(now);
+      else if (state === STATE.COUNTDOWN) {
+        drawNarrativeScene(now);
+        drawCountdown(now);
+      }
       else if (state === STATE.PLAYING || state === STATE.TRIVIA) drawPlayingScene(now);
       else if (state === STATE.WIN) drawWinAnimation(now);
       else if (state === STATE.SCENARIO || state === STATE.SCENARIO_RESULTS) drawScenarioScene(now);
@@ -1383,6 +1433,19 @@
         scenarioPulse = Math.max(0, scenarioPulse - dt / 400);
         tickScenarioTypewriter(dt);
         tickScenarioMusic(dt);
+      }
+
+      if (state === STATE.COUNTDOWN) {
+        const elapsed = Math.max(0, timestamp - countdownStamp);
+        const shown = 3 - Math.floor(elapsed / 1000);
+        if (shown <= 0) {
+          playTone(784, 0.18, 'square', 0.1);
+          setState(STATE.PLAYING);
+        } else if (shown !== countdownValue) {
+          countdownValue = shown;
+          countdownAnnounce.textContent = String(shown);
+          playTone(shown === 1 ? 659 : 523, 0.15, 'square', 0.09);
+        }
       }
 
       if (state === STATE.PLAYING) {
