@@ -45,6 +45,9 @@
     const scenarioExitConfirm = document.getElementById('scenario-exit-confirm');
     const scenarioExitYes = document.getElementById('scenario-exit-yes');
     const scenarioExitNo = document.getElementById('scenario-exit-no');
+    const gameExitConfirm = document.getElementById('game-exit-confirm');
+    const gameExitYes = document.getElementById('game-exit-yes');
+    const gameExitNo = document.getElementById('game-exit-no');
     const scenarioLog = document.getElementById('scenario-log');
     const scenarioPortrait = document.getElementById('scenario-portrait');
     const scenarioPortraitArt = document.getElementById('scenario-portrait-art');
@@ -103,6 +106,7 @@
 
     // --- LIVE GAME VARIABLES (change during play) ---
     let state = STATE.START;
+    let runId = 0;
     let playerName = '';
     let narrativeIndex = 0;
 
@@ -234,9 +238,29 @@
     }
 
     // --- STATE MACHINE ---
+    function isMainGameState(gameState) {
+      return gameState === STATE.NARRATIVE
+        || gameState === STATE.PLAYING
+        || gameState === STATE.TRIVIA
+        || gameState === STATE.WIN
+        || gameState === STATE.GAME_OVER
+        || gameState === STATE.RESULTS;
+    }
+
+    function leaveToMainScreen() {
+      runId += 1;
+      triviaAnimating = false;
+      gameExitConfirm.classList.add('hidden');
+      scenarioExitConfirm.classList.add('hidden');
+      stopScenarioMusic();
+      setState(STATE.START);
+    }
+
     function setState(newState) {
       state = newState;
       document.body.classList.toggle('in-scenario', newState === STATE.SCENARIO);
+      document.body.classList.toggle('in-game', isMainGameState(newState));
+      if (!isMainGameState(newState)) gameExitConfirm.classList.add('hidden');
 
       switch (newState) {
         case STATE.START:
@@ -258,11 +282,11 @@
         case STATE.WIN:
           showOverlay('win');
           winAnimStart = performance.now();
-          setTimeout(() => endGame(true), 2200);
+          scheduleRun(() => endGame(true), 2200);
           break;
         case STATE.GAME_OVER:
           showOverlay('gameover');
-          setTimeout(() => endGame(false), 1800);
+          scheduleRun(() => endGame(false), 1800);
           break;
         case STATE.RESULTS:
           showOverlay('results');
@@ -487,6 +511,14 @@
       });
     }
 
+    function scheduleRun(fn, delay) {
+      const stamp = runId;
+      setTimeout(() => {
+        if (stamp !== runId) return;
+        fn();
+      }, delay);
+    }
+
     function showTriviaResultAnimation(isCorrect, onComplete) {
       triviaAnimating = true;
       clearTriviaFeedback();
@@ -501,7 +533,7 @@
       if (isCorrect) playTriviaCorrectSound();
       else playTriviaWrongSound();
 
-      setTimeout(() => {
+      scheduleRun(() => {
         triviaAnimating = false;
         onComplete();
       }, isCorrect ? 1400 : 1600);
@@ -916,14 +948,28 @@
 
     scenarioExitBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      scenarioExitConfirm.classList.remove('hidden');
+      if (state === STATE.SCENARIO) {
+        gameExitConfirm.classList.add('hidden');
+        scenarioExitConfirm.classList.remove('hidden');
+        return;
+      }
+      scenarioExitConfirm.classList.add('hidden');
+      gameExitConfirm.classList.remove('hidden');
+    });
+
+    gameExitYes.addEventListener('click', (e) => {
+      e.stopPropagation();
+      leaveToMainScreen();
+    });
+
+    gameExitNo.addEventListener('click', (e) => {
+      e.stopPropagation();
+      gameExitConfirm.classList.add('hidden');
     });
 
     scenarioExitYes.addEventListener('click', (e) => {
       e.stopPropagation();
-      scenarioExitConfirm.classList.add('hidden');
-      stopScenarioMusic();
-      setState(STATE.START);
+      leaveToMainScreen();
     });
 
     scenarioExitNo.addEventListener('click', (e) => {

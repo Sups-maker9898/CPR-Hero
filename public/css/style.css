@@ -504,8 +504,41 @@
       white-space: nowrap;
     }
 
-    body.in-scenario #scenario-exit-btn {
+    body.in-scenario #scenario-exit-btn,
+    body.in-game #scenario-exit-btn {
       display: inline-flex;
+    }
+
+    #game-exit-confirm {
+      position: absolute;
+      top: 54px;
+      left: 10px;
+      z-index: 31;
+      width: auto;
+      max-width: calc(100% - 20px);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 2px solid var(--red);
+      background: rgba(40, 8, 16, 0.95);
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    #game-exit-confirm p {
+      margin: 0;
+      color: var(--yellow);
+      font-size: clamp(6px, 1.4vw, 8px);
+    }
+
+    #game-exit-confirm .retro-btn {
+      flex: 0 0 auto;
+      width: auto;
+      min-height: 36px;
+      padding: 8px 12px;
+      font-size: clamp(5px, 1.1vw, 7px);
     }
 
     #scenario-exit-btn .back-arrow {
@@ -1162,6 +1195,11 @@
         min-height: 40px;
         padding: 8px 12px;
         font-size: 8px;
+      }
+
+      #game-exit-confirm {
+        top: 56px;
+        left: 8px;
       }
 
       #scenario-portrait,
