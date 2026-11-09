@@ -7,14 +7,16 @@ CPRHero.leaderboard = {
     return div.innerHTML;
   },
 
-  render(entries, listEl) {
+  render(entries, listEl, labels) {
+    const empty = (labels && labels.empty) || 'No scores yet. Be the first hero!';
+    const pts = (labels && labels.pts) || 'pts';
     if (!entries || entries.length === 0) {
-      listEl.innerHTML = '<li><span>No scores yet. Be the first hero!</span><span></span></li>';
+      listEl.innerHTML = '<li><span>' + this.escapeHtml(empty) + '</span><span></span></li>';
       return;
     }
 
     listEl.innerHTML = entries.map((entry, index) =>
-      `<li><span>#${index + 1} ${this.escapeHtml(entry.name)}</span><span>${entry.score} pts</span></li>`
+      `<li><span>#${index + 1} ${this.escapeHtml(entry.name)}</span><span>${entry.score} ${this.escapeHtml(pts)}</span></li>`
     ).join('');
   },
 

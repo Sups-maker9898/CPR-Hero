@@ -5,6 +5,7 @@ window.CPRHero = window.CPRHero || {};
 CPRHero.Gfx = {
   ready: false,
   imgs: {},
+  dayCache: {},
   metrics: {
     actor: { w: 48, h: 64 },
     cpr: { w: 72, h: 64 },
@@ -48,12 +49,74 @@ CPRHero.Gfx = {
     ctx.drawImage(img, index * fw, 0, fw, fh, Math.round(dx), Math.round(dy), fw * scale, fh * scale);
   },
 
+  isDay() {
+    return window.CPRHero && CPRHero.i18n && CPRHero.i18n.theme() === 'day';
+  },
+
+  /* Night art stays the source. Day remaps sky, moon, and lit windows on the game scene. */
+  dayCanvas(file) {
+    if (this.dayCache[file]) return this.dayCache[file];
+    const img = this.imgs[file];
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const g = canvas.getContext('2d');
+    g.drawImage(img, 0, 0);
+    const image = g.getImageData(0, 0, canvas.width, canvas.height);
+    const px = image.data;
+    const sky = {
+      '16,12,40': [132, 204, 246],
+      '48,24,78': [176, 220, 250],
+      '22,16,28': [150, 208, 244]
+    };
+    const stars = { '86,92,102': 1, '48,52,92': 1 };
+    const sun = { '255,236,196': 1, '244,214,160': 1 };
+    const lightsOff = {
+      '255,206,112': [36, 62, 104],
+      '232,176,48': [36, 62, 104],
+      '180,120,48': [28, 48, 86],
+      '232,124,72': [28, 48, 86],
+      '88,255,190': [22, 78, 70]
+    };
+    for (let i = 0, n = 0; i < px.length; i += 4, n++) {
+      const y = (n / canvas.width) | 0;
+      const key = px[i] + ',' + px[i + 1] + ',' + px[i + 2];
+      if (y < 30 && sky[key]) {
+        px[i] = sky[key][0];
+        px[i + 1] = sky[key][1];
+        px[i + 2] = sky[key][2];
+        continue;
+      }
+      if (y < 20 && stars[key]) {
+        px[i] = 168;
+        px[i + 1] = 214;
+        px[i + 2] = 248;
+        continue;
+      }
+      if (sun[key]) {
+        px[i] = 255;
+        px[i + 1] = 196;
+        px[i + 2] = 48;
+        continue;
+      }
+      if (lightsOff[key]) {
+        px[i] = lightsOff[key][0];
+        px[i + 1] = lightsOff[key][1];
+        px[i + 2] = lightsOff[key][2];
+      }
+    }
+    g.putImageData(image, 0, 0);
+    this.dayCache[file] = canvas;
+    return canvas;
+  },
+
   bg(ctx, w, h, scene) {
     const file = (scene === 'close') ? 'close.png' : 'street.png';
     const img = this.imgs[file];
     if (!img) return;
     this.prep(ctx);
-    ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+    const source = this.isDay() ? this.dayCanvas(file) : img;
+    ctx.drawImage(source, 0, 0, source.width, source.height, 0, 0, w, h);
   },
 
   blit(ctx, file, sx, sy, sw, sh, dx, dy, dw, dh) {
@@ -73,7 +136,7 @@ CPRHero.Gfx = {
   },
 
   ambient(ctx, scene, now) {
-    if (!this.ready) return;
+    if (!this.ready || this.isDay()) return;
     const s = this.metrics.bgScale;
     const glow = Math.floor(now / 180) % 2 === 0;
     if (scene === 'close') {

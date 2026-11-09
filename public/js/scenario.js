@@ -6,8 +6,8 @@ window.CPRHero = window.CPRHero || {};
  * AI/Coach Pulse may explain, never award XP or override outcomes.
  */
 window.CPRHero.createScenarioEngine = function createScenarioEngine(pack) {
-  const catalog = pack.catalog || [];
-  const scenarios = pack.scenarios || {};
+  let catalog = pack.catalog || [];
+  let scenarios = pack.scenarios || {};
 
   let scenario = null;
   let nodeId = null;
@@ -86,6 +86,10 @@ window.CPRHero.createScenarioEngine = function createScenarioEngine(pack) {
   function restart() {
     if (!scenario) return null;
     return start(scenario.id);
+  }
+
+  function clearHistory() {
+    history = [];
   }
 
   function logLine(line, kind) {
@@ -193,6 +197,14 @@ window.CPRHero.createScenarioEngine = function createScenarioEngine(pack) {
     };
   }
 
+  function setPack(next) {
+    catalog = (next && next.catalog) || [];
+    scenarios = (next && next.scenarios) || {};
+    if (scenario && scenario.id && scenarios[scenario.id]) {
+      scenario = scenarios[scenario.id];
+    }
+  }
+
   return {
     catalog: catalog,
     start: start,
@@ -203,6 +215,8 @@ window.CPRHero.createScenarioEngine = function createScenarioEngine(pack) {
     snapshot: snapshot,
     report: report,
     currentNode: currentNode,
-    logLine: logLine
+    logLine: logLine,
+    setPack: setPack,
+    clearHistory: clearHistory
   };
 };

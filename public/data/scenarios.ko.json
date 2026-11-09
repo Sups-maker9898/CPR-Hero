@@ -1,0 +1,410 @@
+{
+  "catalog": [
+    {
+      "id": "unconscious-adult",
+      "title": "의식 없는 성인",
+      "blurb": "8번가에서 대화로 진행하는 구조. 말하고, 역할을 나누고, 결정하세요. 달리기는 없고 소통만 있습니다."
+    }
+  ],
+  "scenarios": {
+    "unconscious-adult": {
+      "id": "unconscious-adult",
+      "title": "의식 없는 성인",
+      "subtitle": "훈련용 대화입니다. 정식 CPR 교육을 대신하지 않습니다.",
+      "start": "scene_safe",
+      "totalSteps": 6,
+      "learningPoints": [
+        "돕기 전에 현장을 안전하게 만드세요. 차도로 뛰어들지 마세요.",
+        "어깨를 두드리고 크게 부르세요. 세게 흔들지 마세요.",
+        "특정한 한 사람에게 응급 신고를 하고, 연결되면 돌아오라고 하세요. 다른 사람에게는 AED를 가져오라고 하세요.",
+        "호흡 확인은 10초를 넘기지 마세요. 헐떡임은 정상 호흡이 아닙니다.",
+        "반응이 없고 정상 호흡이 아니면 바로 CPR을 시작하세요. AED를 기다리지 마세요.",
+        "상황실과 통화를 유지하세요. 맨가슴에 AED를 붙이고 안내를 따르세요. 멈추라고 할 때까지 CPR을 계속하세요."
+      ],
+      "nodes": {
+        "scene_safe": {
+          "id": "scene_safe",
+          "kind": "choice",
+          "step": 1,
+          "scene": "street-traffic",
+          "title": "현장 안전",
+          "hint": "차, 불, 전선을 살피세요. 안전해진 뒤에 다가간다고 말하세요.",
+          "hintQuestion": "이 훈련 장면에서, 쓰러진 성인에게 뛰어가기 전에 길이 위험하다고 말해야 하는 이유는 무엇인가요?",
+          "lines": [
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "8번가의 해 질 녘. 네온이 윙윙거립니다. 성인 한 명이 연석 근처에 가만히 누워 있습니다. 차는 아직 지나갑니다." },
+            { "speaker": "RICK", "portrait": "rick", "anim": "talk", "text": "사람이 쓰러졌어! 어서 — 지금 당장 뛰어가야 해!" },
+            { "speaker": "MAYA", "portrait": "maya", "anim": "talk", "text": "모르겠어... 차들이 멈추질 않아." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "anim": "talk", "text": "영웅. 누구든 움직이기 전에 — 먼저 뭐라고 말할 건가요?" }
+          ],
+          "choices": [
+            {
+              "id": "safe_approach",
+              "label": "\"잠깐! 길을 먼저 봐. 안전할 때만 가자.\"",
+              "playerLine": "잠깐! 양쪽을 봐. 차도로 뛰어들지 마. 길이 비면 그때 다가가자.",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["sceneSafe"],
+              "next": "check_response",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "그래... 맞아. 하마터면 연석에서 내려설 뻔했어." },
+                { "speaker": "MAYA", "portrait": "maya", "text": "차 사이가 비었어. 인도는 괜찮아. 가자." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "맞습니다. 내가 다음 환자가 되면 도울 수 없습니다." }
+              ]
+            },
+            {
+              "id": "run_traffic",
+              "label": "\"시간 없어 — 차도로 달려!\"",
+              "playerLine": "시간 없어! 내가 들어간다!",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "경적이 울립니다. 타이어가 끽 소리를 냅니다. 차가 급히 피합니다." },
+                { "speaker": "RICK", "portrait": "rick", "text": "야! 그 차에 치일 뻔했잖아!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 차가 다니는 길로 뛰어들면 두 번째 피해자가 생길 수 있습니다. 기다리기, 살피기, 그다음 다가가기라고 말하세요." }
+              ]
+            },
+            {
+              "id": "cpr_first",
+              "label": "\"볼 것 없어 — 차도에서 가슴 압박을 시작하자!\"",
+              "playerLine": "둘러볼 것 없어 — 이 차도에서 바로 압박을 시작하자!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "차선 한가운데? 우리 다 치여!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "아직입니다. 안전, 반응, 호흡을 확인하지 않았습니다. CPR은 그 말과 확인 다음입니다." }
+              ]
+            },
+            {
+              "id": "walk_away",
+              "label": "\"우리 일 아냐. 그냥 걷자.\"",
+              "playerLine": "다른 사람이 처리하겠지. 가자.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "그런데 저 사람, 움직이지 않잖아..." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 현장을 안전하게 만들 수 있다면 남아서 말하고 도움을 부르세요. 그냥 가면 처치가 늦어집니다." }
+              ]
+            }
+          ]
+        },
+        "check_response": {
+          "id": "check_response",
+          "kind": "choice",
+          "step": 2,
+          "scene": "check-response",
+          "title": "반응 확인",
+          "hint": "무릎을 꿇고, 양쪽 어깨를 두드리고, 크게 부르세요. 얼굴을 보세요. 흔들지 마세요.",
+          "hintQuestion": "쓰러진 성인을 흔들지 않고 반응이 있는지 확인하려면 뭐라고 말하고 무엇을 해야 할까요?",
+          "lines": [
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "인도에 무릎을 꿇습니다. 성인은 가만히 있습니다. 네온이 얼굴을 비춥니다." },
+            { "speaker": "RICK", "portrait": "rick", "text": "자는 건가...? 흔들어 볼까?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "말이 중요합니다. 반응이 있는지 어떻게 확인할 건가요?" }
+          ],
+          "choices": [
+            {
+              "id": "tap_shout",
+              "label": "어깨를 두드리고 외친다. \"괜찮으세요? 제 말 들려요?\"",
+              "playerLine": "어깨를 두드릴게요 — 괜찮으세요? 제 말 들려요?",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["noResponse"],
+              "next": "assign_help",
+              "reply": [
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "말도 없습니다. 눈도 뜨지 않습니다. 목소리를 향해 움직이지도 않습니다." },
+                { "speaker": "MAYA", "portrait": "maya", "text": "아무 반응도 없어. 나쁜 거 맞지?" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "무반응입니다. 응급입니다. 다음은 사람을 가리키며 역할을 나누는 것입니다." }
+              ]
+            },
+            {
+              "id": "shake_hard",
+              "label": "\"일어나!\" — 세게 흔든다",
+              "playerLine": "일어나! *세게 흔든다*",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "야, 살살! 목이 다칠 수 있어!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 세게 흔들면 다칠 수 있습니다. 어깨를 두드리고 크게 부르세요. 그 대사를 해 보세요." }
+              ]
+            },
+            {
+              "id": "splash_water",
+              "label": "\"마야, 얼굴에 물을 뿌려!\"",
+              "playerLine": "마야, 물병 가져와 — 얼굴에 뿌려!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "그... 그게 맞는 방법 같지 않아." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "그건 반응 확인이 아니고 해를 줄 수 있습니다. 두드리고 부르세요. 물은 안 됩니다." }
+              ]
+            },
+            {
+              "id": "wait_wake",
+              "label": "\"2분만 주자. 일어날지도 몰라.\"",
+              "playerLine": "2분만 기다리자. 깨어날지도 모르잖아.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "2분을 그냥 서 있자고?!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "기다림은 시간을 낭비합니다. 지금 반응이 없으면 지금 도움을 나누세요." }
+              ]
+            }
+          ]
+        },
+        "assign_help": {
+          "id": "assign_help",
+          "kind": "choice",
+          "step": 3,
+          "scene": "calling",
+          "title": "도움 나누기",
+          "hint": "한 사람을 가리켜 전화하게 하세요. 다른 사람에게는 AED를 맡기세요. 전화한 사람에게는 연결되면 돌아오라고 하세요.",
+          "hintQuestion": "특정한 목격자에게 응급 신고를 하고 연결되면 돌아오라고 하고, 다른 사람에게 AED를 가져오라고 해야 하는 이유는 무엇인가요?",
+          "lines": [
+            { "speaker": "RICK", "portrait": "rick", "text": "뭘 하면 되는지 말해! 나 폰 있어!" },
+            { "speaker": "MAYA", "portrait": "maya", "text": "뒤에 건물 로비가 있어. 내가 달려갈 수 있어." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "'누군가'라고 하지 마세요. 가리키세요. 한 사람에게 일 하나씩." }
+          ],
+          "choices": [
+            {
+              "id": "call_and_aed",
+              "label": "\"릭, 응급 신고하고 연결되면 돌아와. 마야, AED 가져와!\"",
+              "playerLine": "릭 — 응급 서비스에 전화하고, 연결되면 돌아와서 알려 줘. 마야 — AED를 가져와!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["helpAssigned"],
+              "next": "phone_connect",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "알겠어! 지금 전화한다 — 받으면 크게 말할게!" },
+                { "speaker": "MAYA", "portrait": "maya", "text": "AED. 다녀올게. 환자 곁을 떠나지 마." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "그렇게 도움을 부르면 됩니다. 환자 곁에 남으세요." }
+              ]
+            },
+            {
+              "id": "leave_for_aed",
+              "label": "\"내가 AED를 찾으러 갈게. 둘은 기다려.\"",
+              "playerLine": "내가 직접 AED를 찾으러 갈게. 둘은... 여기서 같이 기다려.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "대답도 안 하는 사람만 두고 가려고?!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 오래 찾겠다고 환자를 두고 떠나지 마세요. 마야를 보내세요. 당신은 남고, 릭이 전화합니다." }
+              ]
+            },
+            {
+              "id": "wait_crowd",
+              "label": "\"누군가 전화해야 할 텐데... 언제든.\"",
+              "playerLine": "어, 누군가 전화하면 될 것 같은데.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "누군가라니? 우리가 보는 건 당신이야." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "모호한 말은 초를 낭비합니다. 가리키세요. '당신 — 전화하고, 연결되면 돌아와.'" }
+              ]
+            },
+            {
+              "id": "drive_hospital",
+              "label": "\"차에 태우자. 우리가 운전해서 가자.\"",
+              "playerLine": "다리 잡아. 병원으로 운전해서 가자!",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "나는 운전할 수 없고, 뒷좌석에서 그렇게 CPR도 못 해!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 도움을 여기로 부르세요. 운전하면서 CPR은 할 수 없습니다. 신고, AED, 곁에 남기." }
+              ]
+            }
+          ]
+        },
+        "phone_connect": {
+          "id": "phone_connect",
+          "kind": "talk",
+          "step": 3,
+          "scene": "calling",
+          "title": "상황실",
+          "next": "check_breathing",
+          "hint": "릭의 전화를 스피커로 두세요. 성인이 무반응이라고 알린 뒤 호흡을 확인하세요.",
+          "lines": [
+            { "speaker": "RICK", "portrait": "rick", "text": "연결됐어! 스피커로 틀게!" },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "응급입니다. 정확한 위치와 무슨 일이 났는지 말씀해 주세요." },
+            { "speaker": "YOU", "portrait": "hero", "text": "8번가 인도입니다. 성인이 쓰러졌고 반응이 없습니다. 옆에 있습니다." },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "전화를 끊지 마세요. 정상적으로 숨 쉬나요? 가슴을 보세요." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "상황실이 안내하고 있습니다. 다음 말은 빠른 호흡 확인 — 1분이 아니라 10초입니다." }
+          ]
+        },
+        "check_breathing": {
+          "id": "check_breathing",
+          "kind": "choice",
+          "step": 4,
+          "scene": "check-breathing",
+          "title": "호흡 확인",
+          "hint": "보고, 듣고, 느끼기 — 10초를 넘기지 마세요. 가끔 헐떡이는 것은 정상 호흡이 아닙니다.",
+          "hintQuestion": "호흡 확인이 10초인 이유와, 헐떡임을 정상 호흡으로 보면 안 되는 이유는 무엇인가요?",
+          "lines": [
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "가슴을 보세요. 정상 호흡이 보이는지 말해 주세요." },
+            { "speaker": "NARRATOR", "portrait": "narrator", "text": "가슴은 가만히 있습니다... 그러다 이상한 헐떡임이 한 번 납니다." },
+            { "speaker": "RICK", "portrait": "rick", "text": "헐떡였어! 그럼 괜찮은 거지?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "신중하게 답하세요. 릭과 상황실에 뭐라고 말할 건가요?" }
+          ],
+          "choices": [
+            {
+              "id": "ten_seconds",
+              "label": "\"10초: 보고, 듣고, 느끼기. 그 헐떡임은 정상 호흡이 아니야.\"",
+              "playerLine": "10초 동안 보고, 듣고, 느껴 봤어. 그 헐떡임은 정상 호흡이 아니야. 무반응이고, 정상적으로 숨 쉬지 않아.",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["gaspingNoted"],
+              "next": "start_cpr",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "확인했습니다. 반응이 없고 정상 호흡이 아니면 CPR을 시작하세요. 계속 함께하겠습니다." },
+                { "speaker": "RICK", "portrait": "rick", "text": "헐떡인 게 '괜찮다'는 뜻이 아니었구나..." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "맞습니다. 헐떡임은 기다릴 이유가 아니라 CPR을 시작할 이유입니다." }
+              ]
+            },
+            {
+              "id": "watch_minute",
+              "label": "\"상황실, 확실히 하려고 1분 동안 볼게요.\"",
+              "playerLine": "더 확실히 하려고 1분 동안 지켜볼게요.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "1분을 기다리지 마세요. 호흡 확인은 약 10초입니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "너무 느립니다. 오래 보는 것은 위험한 지연입니다. 10초, 그리고 행동하세요." }
+              ]
+            },
+            {
+              "id": "gasping_ok",
+              "label": "\"헐떡였으니 숨 쉬는 거야. 기다리자.\"",
+              "playerLine": "한 번 헐떡였으니 숨 쉬는 거야. 기다려도 돼.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "가끔 헐떡이는 것은 정상 호흡이 아닙니다. 숨이 없는 것으로 대하세요." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 심장이 멈췄을 때도 헐떡일 수 있습니다. 기다리지 마세요." }
+              ]
+            },
+            {
+              "id": "recovery_now",
+              "label": "\"옆으로 눕히고 기다리자.\"",
+              "playerLine": "회복 자세. 옆으로 굴리자.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "정상 호흡이 아니면 안 됩니다. 등을 대고 CPR이 필요합니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "여기서는 위험합니다. 회복 자세는 의식이 없으면서 정상적으로 숨 쉴 때입니다." }
+              ]
+            }
+          ]
+        },
+        "start_cpr": {
+          "id": "start_cpr",
+          "kind": "choice",
+          "step": 5,
+          "scene": "cpr",
+          "title": "CPR 시작",
+          "hint": "지금 가슴 한가운데를 압박하세요. 마야의 AED를 기다리지 마세요.",
+          "hintQuestion": "성인이 무반응이고 정상 호흡이 아닐 때, AED가 오기 전에 CPR을 시작해야 하는 이유는 무엇인가요?",
+          "lines": [
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "손은 가슴 한가운데. 강하고 빠르게 누르세요. 소리 내어 세세요." },
+            { "speaker": "RICK", "portrait": "rick", "text": "마야가 아직 기계를 안 가져왔는데... 기다릴까?" },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "결정을 말로 하세요. 압박 없이 기다리면 피가 돌지 않습니다." }
+          ],
+          "choices": [
+            {
+              "id": "start_compressions",
+              "label": "\"지금 CPR 시작. 가슴 한가운데. 강하고 빠르게.\"",
+              "playerLine": "지금 CPR을 시작합니다 — 손은 가슴 한가운데, 강하고 빠르게. 릭, 상황실을 스피커로 유지해!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["cprStarted"],
+              "next": "aed_dispatcher",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "좋습니다. 계속하세요. 누를 때마다 가슴이 완전히 올라오게 하세요." },
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "단단한 인도 위에서 압박합니다. 박자에 맞춰 셉니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "맞습니다. 분당 100에서 120. 이 게임의 박자는 110입니다. 기계 때문에 멈추지 마세요." }
+              ]
+            },
+            {
+              "id": "wait_aed_only",
+              "label": "\"AED를 기다리자. 그때까지 압박은 하지 마.\"",
+              "playerLine": "AED를 기다리자. 마야가 올 때까지 압박은 하지 마.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "지금 CPR을 시작하세요. AED는 도착하는 순간 쓰세요. 누르는 것을 미루지 마세요." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 압박이 없으면 피가 돌지 않습니다. 지금 시작하세요." }
+              ]
+            },
+            {
+              "id": "breaths_only",
+              "label": "\"숨만 불어 넣을게. 가슴은 누르지 마.\"",
+              "playerLine": "숨만 불어 넣을게. 가슴은 건너뛸게.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "가슴 압박이 우선입니다. 빼지 마세요." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "쓰러진 성인에게는 누르는 것이 먼저입니다. 인공호흡은 교육을 받았다면 더할 수 있지만, 압박 대신이면 안 됩니다." }
+              ]
+            },
+            {
+              "id": "sit_up",
+              "label": "\"앉혀서 숨 쉬게 하자.\"",
+              "playerLine": "앉혀 줘. 그러면 숨이 편해질지도 몰라.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "RICK", "portrait": "rick", "text": "몸이 축 늘어졌어 — 이러면 도움이 안 돼!" },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. CPR에는 단단하고 평평한 등이 필요합니다. 앉히면 안 됩니다." }
+              ]
+            }
+          ]
+        },
+        "aed_dispatcher": {
+          "id": "aed_dispatcher",
+          "kind": "choice",
+          "step": 6,
+          "scene": "aed",
+          "title": "AED + 상황실",
+          "hint": "CPR을 유지하세요. AED를 켜고, 맨가슴에 붙이고, 음성을 따르세요. 통화는 유지하세요.",
+          "hintQuestion": "AED가 도착하면 영웅은 마야와 상황실에 무엇을 하라고 말해야 할까요?",
+          "lines": [
+            { "speaker": "MAYA", "portrait": "maya", "text": "가져왔어! 노란 상자야 — 어떻게 해?!" },
+            { "speaker": "DISPATCH", "portrait": "dispatch", "text": "전원을 켜세요. 가슴을 드러내세요. 그림을 따르세요. 멈추라고 할 때까지 CPR을 계속하세요." },
+            { "speaker": "COACH PULSE", "portrait": "coach", "text": "마지막 결정입니다. 마야에게 할 말을 고르세요." }
+          ],
+          "choices": [
+            {
+              "id": "follow_aed",
+              "label": "\"CPR 유지. 마야, 전원 켜고, 맨살에 패드, 음성을 따라.\"",
+              "playerLine": "기계가 말할 때까지 압박을 유지해. 마야 — 켜고, 맨살에 패드를 붙이고, 음성 안내를 따라. 상황실, 계속 함께해 주세요!",
+              "result": "correct",
+              "xp": 20,
+              "flags": ["aedUsed"],
+              "next": "COMPLETE",
+              "reply": [
+                { "speaker": "AED", "portrait": "aed", "text": "분석 중. 모두 떨어지세요." },
+                { "speaker": "YOU", "portrait": "hero", "text": "떨어지세요! ... 충격 완료. 다시 가슴으로!" },
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "구급대가 도착하고 있습니다. 그들이 인수할 때까지 CPR을 계속하세요." },
+                { "speaker": "NARRATOR", "portrait": "narrator", "text": "사이렌이 네온을 붉게 물들입니다. 구급대원이 무릎을 꿇습니다. 당신의 말이 도움을 여기까지 불렀습니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "훈련 완료. 기록을 다시 보세요. 이것은 연습입니다 — 정식 CPR 교육을 받으세요." }
+              ]
+            },
+            {
+              "id": "stop_all",
+              "label": "\"다 멈춰. 구급차가 충분히 가까워.\"",
+              "playerLine": "CPR 멈춰. 도움이 가까우니 기다리자.",
+              "result": "unsafe",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "멈추지 마세요. AED가 멈추라고 하거나 구급대가 인수할 때까지 계속하세요." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "위험합니다. 가까운 것은 도착한 것이 아닙니다. 압박은 아직 중요합니다." }
+              ]
+            },
+            {
+              "id": "ignore_dispatch",
+              "label": "\"릭, 전화 끊어. 집중해야 해.\"",
+              "playerLine": "릭, 상황실 전화를 끊어. 조용해야 해.",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "가능하면 전화를 유지하세요. AED 단계를 계속 안내할 수 있습니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "스피커폰을 유지하세요. 상황실은 알맞은 도움을 보내고 절차를 알려 줍니다." }
+              ]
+            },
+            {
+              "id": "pads_clothes",
+              "label": "\"코트 위에 패드를 붙여. 그게 더 빨라!\"",
+              "playerLine": "코트 위에 그냥 패드를 붙여 — 더 빠르잖아!",
+              "result": "incorrect",
+              "reply": [
+                { "speaker": "MAYA", "portrait": "maya", "text": "패드 그림은 맨가슴인데..." },
+                { "speaker": "DISPATCH", "portrait": "dispatch", "text": "가슴을 드러내세요. 패드는 피부에. 그다음 분석합니다." },
+                { "speaker": "COACH PULSE", "portrait": "coach", "text": "패드는 맨살에. 분석 중이라고 하면 모두 떨어지세요." }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -455,20 +455,26 @@ def draw_actor(pose, pal, hair_style, medic=False):
 
 
 def draw_cpr(pal, press):
-    """Kneeling compression. Hands travel down; the hero does not step."""
+    """Kneeling on the ground beside the hip, both hands on the sternum."""
     img = canvas(CPR_W, CPR_H)
-    ellipse(img, 24, 61, 14, 2, (0, 0, 0, 70), (0, 0, 0, 100), (0, 0, 0, 120))
-    ellipse(img, 58, 60, 8, 2, (0, 0, 0, 50), (0, 0, 0, 80), (0, 0, 0, 90))
     lean = 1 if press >= 4 else 0
-    legs_kneel(img, 4, 42, pal)
-    torso(img, 12, 26 + lean, pal, False)
-    draw_head(img, 18, 14 + lean, "worry" if press >= 4 else "idle", "short", pal)
-    # Locked elbows reach the chest. `press` is how far the hands have dropped.
-    shade_box(img, 26, 30 + press, 16, 6, pal["jacket_l"], pal["jacket"], pal["jacket_d"])
-    shade_box(img, 38, 34 + press, 14, 6, pal["jacket_l"], pal["jacket"], pal["jacket_d"])
-    shade_box(img, 48, 38 + press, 14, 9, SKIN_L, SKIN, SKIN_D)
-    fill(img, 52, 41 + press, 8, 3, SKIN_D)
-    put(img, 55, 40 + press, SKIN_L)
+    # Heels on the sidewalk. Thighs fold flat so the pose reads as sitting.
+    ellipse(img, 46, 62, 16, 2, (0, 0, 0, 70), (0, 0, 0, 100), (0, 0, 0, 120))
+    shade_box(img, 36, 48, 8, 10, pal["pants_l"], pal["pants"], pal["pants_d"])
+    shade_box(img, 34, 56, 12, 5, pal["shoe_l"], pal["shoe"], INK)
+    fill(img, 34, 60, 12, 1, SOLE)
+    shade_box(img, 52, 50, 8, 8, pal["pants"], pal["pants"], pal["pants_d"])
+    shade_box(img, 54, 56, 10, 5, pal["shoe"], pal["shoe"], INK)
+    shade_box(img, 40, 42, 22, 8, pal["pants_l"], pal["pants"], pal["pants_d"])
+    torso(img, 42, 26 + lean, pal, False)
+    draw_head(img, 50, 18 + lean, "worry" if press >= 4 else "idle", "short", pal)
+    # Elbows bend. The reach is only as long as a real kneeling arm.
+    shade_box(img, 30, 32 + lean, 14, 7, pal["jacket_l"], pal["jacket"], pal["jacket_d"])
+    shade_box(img, 20, 38 + press // 2, 14, 7, pal["jacket_l"], pal["jacket"], pal["jacket_d"])
+    hand_y = 44 + press
+    shade_box(img, 8, hand_y, 18, 11, SKIN_L, SKIN, SKIN_D)
+    fill(img, 12, hand_y + 4, 10, 3, SKIN_D)
+    put(img, 14, hand_y + 2, SKIN_L)
     silhouette(img)
     return img
 

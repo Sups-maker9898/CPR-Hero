@@ -166,9 +166,40 @@
 
     // Detect touch devices for control hints
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) {
-      compressBtn.textContent = 'COMPRESS — TAP';
+
+    function tr(key) {
+      return (window.CPRHero && CPRHero.i18n && CPRHero.i18n.t(key)) || key;
     }
+
+    function uiFont(px) {
+      if (CPRHero.i18n && CPRHero.i18n.lang() === 'ko') {
+        return Math.round(px * 1.45) + 'px "Jua", sans-serif';
+      }
+      return px + 'px "Press Start 2P", monospace';
+    }
+
+    function speakerName(name) {
+      const key = {
+        NARRATOR: 'narrator',
+        'COACH PULSE': 'coachPulse',
+        DISPATCH: 'dispatch',
+        YOU: 'you',
+        PATIENT: 'patient',
+        AED: 'aed'
+      }[(name || '').toUpperCase()];
+      return key ? tr(key) : name;
+    }
+
+    function updateCompressLabel() {
+      compressBtn.textContent = isTouchDevice ? tr('compressTap') : tr('compressSpace');
+    }
+
+    updateCompressLabel();
+
+    let lastReport = null;
+    let lastBoardEntries = null;
+    let boardFailed = false;
+    let loadToken = 0;
 
     function showMobileScreen(screen) {
       document.body.classList.toggle('mobile-coach', screen === 'coach');
@@ -197,8 +228,23 @@
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
+    function soundMuted() {
+      return window.CPRHero && CPRHero.i18n && CPRHero.i18n.muted && CPRHero.i18n.muted();
+    }
+
+    function syncSound() {
+      if (!audioCtx) return;
+      if (soundMuted()) {
+        if (audioCtx.state === 'running') audioCtx.suspend();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
     function playTone(freq, duration, type = 'square', volume = 0.07) {
+      if (soundMuted()) return;
       initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = type;
@@ -247,7 +293,18 @@
     }
 
     function renderLeaderboard(entries) {
-      CPRHero.leaderboard.render(entries, leaderboardList);
+      boardFailed = false;
+      lastBoardEntries = entries;
+      CPRHero.leaderboard.render(entries, leaderboardList, {
+        empty: tr('noScores'),
+        pts: tr('pts')
+      });
+    }
+
+    function showOfflineLeaderboard() {
+      boardFailed = true;
+      lastBoardEntries = null;
+      leaderboardList.innerHTML = '<li><span>' + escapeHtml(tr('leaderboardOffline')) + '</span><span></span></li>';
     }
 
     function escapeHtml(str) {
@@ -255,6 +312,10 @@
     }
 
     // --- STATE MACHINE ---
+    function tutorialBlocking() {
+      return !!(window.CPRHero && CPRHero.tutorial && CPRHero.tutorial.isOpen && CPRHero.tutorial.isOpen());
+    }
+
     function isMainGameState(gameState) {
       return gameState === STATE.NARRATIVE
         || gameState === STATE.COUNTDOWN
@@ -273,6 +334,14 @@
       stopScenarioMusic();
       setState(STATE.START);
     }
+
+    let tutorialThenCountdown = false;
+
+    window.addEventListener('cprhero-tutorial-closed', () => {
+      if (!tutorialThenCountdown) return;
+      tutorialThenCountdown = false;
+      setState(STATE.COUNTDOWN);
+    });
 
     function setState(newState) {
       state = newState;
@@ -426,13 +495,13 @@
         compressionPoints += pts;
 
         lastHitFeedback = {
-          text: streak >= STREAK_MULTIPLIER_AT ? 'PERFECT! 2x' : 'PERFECT!',
+          text: streak >= STREAK_MULTIPLIER_AT ? tr('perfect2x') : tr('perfect'),
           color: '#4ecca3',
           time: now
         };
 
         if (streak === STREAK_MULTIPLIER_AT) {
-          lastHitFeedback = { text: '2x STREAK MULTIPLIER!', color: '#f5c518', time: now };
+          lastHitFeedback = { text: tr('streak2x'), color: '#f5c518', time: now };
         }
 
         playTone(660, 0.1, 'square', 0.08);
@@ -442,7 +511,7 @@
         goodCompressions++;
         oxygen = Math.min(100, oxygen + 4);
         streak = 0;
-        lastHitFeedback = { text: 'GOOD', color: '#f5c518', time: now };
+        lastHitFeedback = { text: tr('good'), color: '#f5c518', time: now };
         playTone(440, 0.08, 'triangle', 0.06);
       }
 
@@ -450,7 +519,7 @@
         misses++;
         oxygen = Math.max(0, oxygen - 15);
         streak = 0;
-        lastHitFeedback = { text: 'MISS', color: '#ff4444', time: now };
+        lastHitFeedback = { text: tr('miss'), color: '#ff4444', time: now };
         playTone(110, 0.14, 'sawtooth', 0.07);
       }
 
@@ -488,9 +557,9 @@
     // --- COMPRESSION-RATE WISPS (same presses as scoring) ---
     function spawnVapor(judgment, now) {
       const copy = {
-        perfect: { text: 'PERFECT', color: '#c8ffe9' },
-        fast: { text: 'TOO FAST', color: '#ffc1c1' },
-        slow: { text: 'TOO SLOW', color: '#ffe3ad' }
+        perfect: { text: tr('perfect'), color: '#c8ffe9' },
+        fast: { text: tr('tooFast'), color: '#ffc1c1' },
+        slow: { text: tr('tooSlow'), color: '#ffe3ad' }
       }[judgment];
       if (!copy) return;
       vaporWisps.push({
@@ -509,7 +578,7 @@
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '8px "Press Start 2P"';
+      ctx.font = uiFont(8);
 
       for (let i = 0; i < vaporWisps.length; i++) {
         const wisp = vaporWisps[i];
@@ -613,8 +682,11 @@
 
       currentTriviaIndex = getRandomTriviaIndex();
       CPRHero.trivia.currentIndex = currentTriviaIndex;
-      const q = CPRHero.trivia.currentQuestion();
+      fillTriviaOptions(CPRHero.trivia.currentQuestion());
+    }
 
+    function fillTriviaOptions(q) {
+      if (!q) return;
       triviaQuestion.textContent = q.question;
       triviaLives.innerHTML = formatLivesHtml();
       triviaOptions.innerHTML = '';
@@ -641,8 +713,8 @@
       clearTriviaFeedback();
 
       triviaFeedback.innerHTML = isCorrect
-        ? '<span class="feedback-icon">✓</span><span>CORRECT! Patient revived!</span>'
-        : '<span class="feedback-icon">✗</span><span>WRONG! Life lost!</span>';
+        ? '<span class="feedback-icon">✓</span><span>' + escapeHtml(tr('triviaCorrectFx')) + '</span>'
+        : '<span class="feedback-icon">✗</span><span>' + escapeHtml(tr('triviaWrongFx')) + '</span>';
 
       triviaFeedback.className = isCorrect ? 'show-correct' : 'show-wrong';
       triviaOverlay.classList.add(isCorrect ? 'flash-correct' : 'flash-wrong');
@@ -715,24 +787,41 @@
         console.error('Leaderboard save failed:', err);
       }
 
-      scoreBreakdown.innerHTML = `
-        <p>HERO: ${escapeHtml(playerName)}</p>
-        <p>FINAL SCORE: ${finalScore}</p>
-        <p>Perfect: ${perfectCompressions}</p>
-        <p>Good: ${goodCompressions}</p>
-        <p>Misses: ${misses}</p>
-        <p>Trivia Saves: ${correctTrivia} (x50)</p>
-        <p>2x Multiplier Perfects: ${streakMultiplierPerfects}</p>
-        <p>Best Rhythm Combo: ${bestRhythmCombo}</p>
-        <p>Time Bonus: ${timeBonus}s (x5)</p>
-        <p>${didWin ? 'STATUS: RESCUED!' : 'STATUS: GAME OVER'}</p>
-      `;
+      lastReport = {
+        playerName: playerName,
+        finalScore: finalScore,
+        perfectCompressions: perfectCompressions,
+        goodCompressions: goodCompressions,
+        misses: misses,
+        correctTrivia: correctTrivia,
+        streakMultiplierPerfects: streakMultiplierPerfects,
+        bestRhythmCombo: bestRhythmCombo,
+        timeBonus: timeBonus,
+        didWin: didWin
+      };
+      paintScoreReport(lastReport);
 
       setState(STATE.RESULTS);
     }
 
+    function paintScoreReport(report) {
+      scoreBreakdown.innerHTML = `
+        <p>${tr('hero')}: ${escapeHtml(report.playerName)}</p>
+        <p>${tr('finalScore')}: ${report.finalScore}</p>
+        <p>${tr('perfectStat')}: ${report.perfectCompressions}</p>
+        <p>${tr('goodStat')}: ${report.goodCompressions}</p>
+        <p>${tr('misses')}: ${report.misses}</p>
+        <p>${tr('triviaSaves')}: ${report.correctTrivia} (x50)</p>
+        <p>${tr('multiplierPerfects')}: ${report.streakMultiplierPerfects}</p>
+        <p>${tr('bestCombo')}: ${report.bestRhythmCombo}</p>
+        <p>${tr('timeBonus')}: ${report.timeBonus}s (x5)</p>
+        <p>${report.didWin ? tr('statusRescued') : tr('statusOver')}</p>
+      `;
+    }
+
     // --- INPUT: SPACEBAR (PC) + TAP (MOBILE) + COMPRESS BUTTON ---
     function handleCompress() {
+      if (tutorialBlocking()) return;
       if (state !== STATE.PLAYING) return;
       initAudio();
       const now = performance.now();
@@ -752,6 +841,9 @@
 
     // Capture phase: space works for CPR even when chat input was focused
     window.addEventListener('keydown', (e) => {
+      if (CPRHero.i18n && CPRHero.i18n.settingsOpen && CPRHero.i18n.settingsOpen()) return;
+      if (tutorialBlocking()) return;
+
       if (state === STATE.SCENARIO && (e.code === 'Space' || e.code === 'Enter')) {
         if (isTypingInTextField()) return;
         e.preventDefault();
@@ -806,6 +898,13 @@
     narrativeBtn.addEventListener('click', advanceNarrative);
     call911Btn.addEventListener('click', () => {
       initAudio();
+      const lesson = window.CPRHero && CPRHero.tutorial;
+      if (lesson && lesson.open && !lesson.isOpen()) {
+        tutorialThenCountdown = true;
+        hideAllOverlays();
+        lesson.open();
+        return;
+      }
       setState(STATE.COUNTDOWN);
     });
 
@@ -827,11 +926,11 @@
     }
 
     function updateScenarioHud(snap) {
-      scenarioXp.textContent = 'XP ' + snap.xp;
+      scenarioXp.textContent = tr('xp') + ' ' + snap.xp;
       scenarioProgress.textContent = snap.node
-        ? 'STEP ' + snap.node.step + ' / ' + snap.totalSteps
-        : 'DONE';
-      scenarioStepLabel.textContent = snap.node ? snap.node.title : 'COMPLETE';
+        ? tr('step') + ' ' + snap.node.step + ' / ' + snap.totalSteps
+        : tr('done');
+      scenarioStepLabel.textContent = snap.node ? snap.node.title : tr('complete');
     }
 
     function portraitFace(speaker) {
@@ -847,7 +946,9 @@
     }
 
     function showScenarioLine(line) {
-      const speaker = line.speaker === 'YOU' ? (playerName.toUpperCase() || 'YOU') : (line.speaker || 'NARRATOR');
+      const speaker = line.speaker === 'YOU'
+        ? (playerName.toUpperCase() || tr('you'))
+        : speakerName(line.speaker || 'NARRATOR');
       scenarioSpeaker.textContent = speaker;
       scenarioSpeakerId = portraitFace(line.speaker);
       scenarioPortrait.dataset.face = scenarioSpeakerId;
@@ -888,7 +989,7 @@
 
     function renderScenarioLog(history) {
       if (!history || !history.length) {
-        scenarioLog.innerHTML = '<p>No lines yet.</p>';
+        scenarioLog.innerHTML = '<p>' + escapeHtml(tr('noLines')) + '</p>';
         return;
       }
       scenarioLog.innerHTML = history.map((entry) => {
@@ -896,7 +997,10 @@
           : entry.speaker === 'COACH PULSE' ? 'log-coach'
           : entry.speaker === 'DISPATCH' ? 'log-dispatch'
           : entry.result === 'unsafe' ? 'log-unsafe' : '';
-        return '<p class="' + cls + '"><strong>' + escapeHtml(entry.speaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>';
+        const shownSpeaker = entry.speaker === 'YOU'
+          ? (playerName.toUpperCase() || tr('you'))
+          : speakerName(entry.speaker);
+        return '<p class="' + cls + '"><strong>' + escapeHtml(shownSpeaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>';
       }).join('');
       scenarioLog.scrollTop = scenarioLog.scrollHeight;
     }
@@ -1000,34 +1104,40 @@
       if (result.complete) {
         stopScenarioMusic();
         showScenarioResults(result.report);
-        if (window.CoachPulse) CoachPulse.speakScenario('Scenario complete. Open LOG anytime on a replay to review the conversation.');
+        if (window.CoachPulse) CoachPulse.speakScenario(tr('scenarioCompleteCoach'));
         return;
       }
       if (result.snapshot) renderScenarioNode(result.snapshot);
     }
 
-    function showScenarioResults(report) {
+    function fillScenarioReport(report) {
       scenarioScene = report.scene || 'ambulance';
       const completedLines = report.completed.length
-        ? report.completed.map((step) => step.title + (step.firstTry ? ' (clean)' : ' (retry)')).join(', ')
-        : 'None';
+        ? report.completed.map((step) => step.title + (step.firstTry ? tr('cleanSuffix') : tr('retrySuffix'))).join(', ')
+        : tr('none');
       const mistakeLines = report.mistakes.length
         ? report.mistakes.map((item) => '<p class="mistake">- ' + escapeHtml(item.title) + ': ' + escapeHtml(item.choice) + '</p>').join('')
-        : '<p>No unsafe or incorrect lines. Sharp talking.</p>';
+        : '<p>' + escapeHtml(tr('noMistakes')) + '</p>';
       const learnLines = report.learningPoints.map((line) => '<p>- ' + escapeHtml(line) + '</p>').join('');
-      const logPreview = (report.history || []).slice(-8).map((entry) =>
-        '<p><strong>' + escapeHtml(entry.speaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>'
-      ).join('');
+      const logPreview = (report.history || []).slice(-8).map((entry) => {
+        const shownSpeaker = entry.speaker === 'YOU'
+          ? (playerName.toUpperCase() || tr('you'))
+          : speakerName(entry.speaker);
+        return '<p><strong>' + escapeHtml(shownSpeaker) + ':</strong> ' + escapeHtml(entry.text) + '</p>';
+      }).join('');
 
       scenarioReport.innerHTML =
-        '<p>HERO: ' + escapeHtml(playerName) + '</p>' +
-        '<p>XP: ' + report.xp + ' / ' + report.maxXp + '</p>' +
-        '<p>STEPS DONE: ' + escapeHtml(completedLines) + '</p>' +
-        '<p>MISTAKES:</p>' + mistakeLines +
-        '<p>LEARNING POINTS:</p>' + learnLines +
-        '<p>RECENT LOG:</p>' + logPreview +
-        '<p>This is practice. Take a certified CPR course for real skills.</p>';
+        '<p>' + tr('hero') + ': ' + escapeHtml(playerName) + '</p>' +
+        '<p>' + tr('xp') + ': ' + report.xp + ' / ' + report.maxXp + '</p>' +
+        '<p>' + tr('stepsDone') + ': ' + escapeHtml(completedLines) + '</p>' +
+        '<p>' + tr('mistakes') + ':</p>' + mistakeLines +
+        '<p>' + tr('learningPoints') + ':</p>' + learnLines +
+        '<p>' + tr('recentLog') + ':</p>' + logPreview +
+        '<p>' + escapeHtml(tr('practiceNote')) + '</p>';
+    }
 
+    function showScenarioResults(report) {
+      fillScenarioReport(report);
       setState(STATE.SCENARIO_RESULTS);
     }
 
@@ -1116,7 +1226,7 @@
     scenarioHintBtn.addEventListener('click', () => {
       const node = scenarioEngine && scenarioEngine.currentNode();
       if (!node) return;
-      const hintLine = { speaker: 'COACH PULSE', portrait: 'coach', text: node.hint || 'Stay with the conversation. Pick the safest line.' };
+      const hintLine = { speaker: 'COACH PULSE', portrait: 'coach', text: node.hint || tr('scenarioHintFallback') };
       playScenarioQueue([hintLine].concat(scenarioQueue), scenarioAfterQueue);
       if (window.CoachPulse) {
         CoachPulse.explainScenarioHint(node.hint, node.hintQuestion);
@@ -1158,9 +1268,9 @@
       ctx.strokeRect(x, y, w, h);
 
       ctx.fillStyle = '#fff';
-      ctx.font = '10px "Press Start 2P"';
+      ctx.font = uiFont(10);
       ctx.textAlign = 'left';
-      ctx.fillText(`OXYGEN: ${Math.round(oxygen)}%`, x, y - 8);
+      ctx.fillText(tr('oxygen') + ': ' + Math.round(oxygen) + '%', x, y - 8);
     }
 
     function formatLivesHtml() {
@@ -1175,9 +1285,9 @@
 
     function drawLivesOnCanvas(x, y) {
       ctx.textAlign = 'left';
-      ctx.font = '8px "Press Start 2P"';
+      ctx.font = uiFont(8);
       ctx.fillStyle = '#fff';
-      ctx.fillText('LIVES', x, y);
+      ctx.fillText(tr('lives'), x, y);
 
       const heartY = y + 30;
       const heartSize = 26;
@@ -1222,7 +1332,7 @@
       const s = secs % 60;
 
       ctx.fillStyle = secs <= 10 ? '#ff4444' : '#fff';
-      ctx.font = '12px "Press Start 2P"';
+      ctx.font = uiFont(12);
       ctx.textAlign = 'right';
       ctx.fillText(`${mins}:${String(s).padStart(2, '0')}`, CW - 40, 48);
 
@@ -1261,16 +1371,16 @@
       drawTimerAndLives();
 
       ctx.textAlign = 'center';
-      ctx.font = '8px "Press Start 2P"';
+      ctx.font = uiFont(8);
       ctx.fillStyle = streak >= STREAK_MULTIPLIER_AT ? '#f5c518' : '#888';
-      ctx.fillText(`STREAK: ${streak}`, CENTER_X, CH - 72);
+      ctx.fillText(tr('streak') + ': ' + streak, CENTER_X, CH - 72);
 
       ctx.fillStyle = '#888';
-      ctx.fillText(`SCORE: ${compressionPoints + correctTrivia * 50}`, CENTER_X, CH - 52);
+      ctx.fillText(tr('score') + ': ' + (compressionPoints + correctTrivia * 50), CENTER_X, CH - 52);
 
       ctx.fillStyle = '#f5c518';
-      ctx.fillText(isTouchDevice ? 'TAP TO COMPRESS' : 'SPACEBAR TO COMPRESS', CENTER_X, CH - 28);
-      ctx.fillText(`BEAT ${BPM}`, CENTER_X, CH - 92);
+      ctx.fillText(isTouchDevice ? tr('tapCompress') : tr('spaceCompress'), CENTER_X, CH - 28);
+      ctx.fillText(tr('beat') + ' ' + BPM, CENTER_X, CH - 92);
     }
 
     function drawHitFeedback(now) {
@@ -1280,7 +1390,7 @@
 
       ctx.globalAlpha = 1 - age / 600;
       ctx.fillStyle = lastHitFeedback.color;
-      ctx.font = '14px "Press Start 2P"';
+      ctx.font = uiFont(14);
       ctx.textAlign = 'center';
       ctx.fillText(lastHitFeedback.text, CENTER_X, CENTER_Y - 95);
       ctx.globalAlpha = 1;
@@ -1317,6 +1427,21 @@
       );
     }
 
+    // Kneeling beside the hip. Stacked palms are sprite x 9–24, bottom y 54.
+    // The patient's sternum is x 38 and the chest top is y 11.
+    function cprHeroX(patientX) {
+      const scale = CPRHero.Gfx.metrics.scale;
+      return patientX + (38 - 16) * scale;
+    }
+
+    function cprHeroY() {
+      const scale = CPRHero.Gfx.metrics.scale;
+      const feet = CPRHero.Gfx.metrics.ground;
+      const patientY = feet - CPRHero.Gfx.metrics.patient.h * scale + 14;
+      const restOverlap = 8;
+      return patientY + 11 * scale + restOverlap - 54 * scale;
+    }
+
     function drawCountdown(now) {
       const age = (now - countdownStamp) % 1000;
       const pop = 1 + Math.max(0, 1 - age / 260) * 0.28;
@@ -1327,7 +1452,7 @@
       ctx.save();
       ctx.translate(CENTER_X, CENTER_Y - 10);
       ctx.scale(pop, pop);
-      ctx.font = '64px "Press Start 2P", monospace';
+      ctx.font = uiFont(64);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#140814';
@@ -1336,11 +1461,11 @@
       ctx.fillText(String(countdownValue), 0, 0);
       ctx.restore();
 
-      ctx.font = '10px "Press Start 2P", monospace';
+      ctx.font = uiFont(10);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#fff8e0';
-      ctx.fillText('GET READY', CENTER_X, CENTER_Y + 78);
+      ctx.fillText(tr('getReady'), CENTER_X, CENTER_Y + 78);
     }
 
     function drawNarrativeScene(now) {
@@ -1357,9 +1482,10 @@
       const feet = CPRHero.Gfx.metrics.ground;
       const G = CPRHero.Gfx;
       if (paintWorld(now, 'close')) {
-        drawPatientSprite(now, 250, false, true);
+        const patientX = 250;
+        drawPatientSprite(now, patientX, false, true);
         const cpr = G.metrics.cpr;
-        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, 70, feet - cpr.h * G.metrics.scale, G.metrics.scale);
+        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, cprHeroX(patientX), cprHeroY(), G.metrics.scale);
         drawActor('rick.png', G.standIndex(now, true, false, true), 560, feet);
       }
       drawTimingRing();
@@ -1422,9 +1548,10 @@
       let heroHead = { headX: 200, headY: 120 };
       if (compressing) {
         const cpr = G.metrics.cpr;
-        const y = feet - cpr.h * G.metrics.scale;
-        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, 150, y, G.metrics.scale);
-        heroHead = { headX: 190, headY: y + 8 };
+        const y = cprHeroY();
+        const heroX = cprHeroX(patientX);
+        G.frame(ctx, 'hero-cpr.png', G.cprIndex(now), cpr.w, cpr.h, heroX, y, G.metrics.scale);
+        heroHead = { headX: heroX + 40, headY: y + 8 };
       } else if (close) {
         heroHead = drawActor('hero.png', G.kneelIndex(now, heroTalk), 175, feet);
       } else {
@@ -1467,9 +1594,9 @@
       ctx.fillStyle = 'rgba(8, 6, 20, 0.72)';
       ctx.fillRect(CENTER_X - 168, 8, 336, 18);
       ctx.fillStyle = '#c9b8ff';
-      ctx.font = '8px "Press Start 2P"';
+      ctx.font = uiFont(8);
       ctx.textAlign = 'center';
-      ctx.fillText('8TH STREET  •  DIALOGUE MODE', CENTER_X, 21);
+      ctx.fillText(tr('dialogueMode'), CENTER_X, 21);
       if (scenarioPulse > 0) {
         ctx.globalAlpha = scenarioPulse * 0.8;
         ctx.strokeStyle = '#4ecca3';
@@ -1500,9 +1627,9 @@
       }
 
       ctx.fillStyle = '#4ecca3';
-      ctx.font = '10px "Press Start 2P"';
+      ctx.font = uiFont(10);
       ctx.textAlign = 'center';
-      ctx.fillText('SAVED!', CENTER_X, 48);
+      ctx.fillText(tr('saved'), CENTER_X, 48);
     }
 
     function render(now) {
@@ -1545,7 +1672,10 @@
         tickScenarioMusic(dt);
       }
 
-      if (state === STATE.COUNTDOWN) {
+      if (tutorialBlocking()) {
+        if (state === STATE.PLAYING) beatStartTime += dt;
+        if (state === STATE.COUNTDOWN) countdownStamp += dt;
+      } else if (state === STATE.COUNTDOWN) {
         const elapsed = Math.max(0, timestamp - countdownStamp);
         const shown = 3 - Math.floor(elapsed / 1000);
         if (shown <= 0) {
@@ -1556,9 +1686,7 @@
           countdownAnnounce.textContent = String(shown);
           playTone(shown === 1 ? 659 : 523, 0.15, 'square', 0.09);
         }
-      }
-
-      if (state === STATE.PLAYING) {
+      } else if (state === STATE.PLAYING) {
         remainingMs -= dt;
 
         if (remainingMs <= 0) {
@@ -1575,26 +1703,75 @@
 
     // --- BOOTSTRAP: start the engine when page loads ---
     
-    async function loadGameContent() {
-      const [triviaData, storyData, coachData, scenarioData] = await Promise.all([
-        fetch('/data/trivia.json').then((r) => r.json()),
-        fetch('/data/story.json').then((r) => r.json()),
-        fetch('/data/coach.json').then((r) => r.json()),
-        fetch('/data/scenarios.json').then((r) => r.json()),
-        CPRHero.Gfx.load()
-      ]);
-
-      TRIVIA_BANK = triviaData.questions;
-      CPRHero.trivia.setBank(TRIVIA_BANK);
-      NARRATIVE_BEATS = storyData.beats;
-      call911Prompt = storyData.call911Prompt || call911Prompt;
-      window.CoachPulse = CPRHero.createCoach(coachData);
-      scenarioEngine = CPRHero.createScenarioEngine(scenarioData);
+    function contentFile(name) {
+      const lang = CPRHero.i18n && CPRHero.i18n.lang() === 'ko' ? 'ko' : 'en';
+      return lang === 'ko' ? '/data/' + name + '.ko.json' : '/data/' + name + '.json';
     }
 
-    loadGameContent().then(() => {
+    async function loadLocalizedContent() {
+      const token = ++loadToken;
+      const [triviaData, storyData, coachData, scenarioData] = await Promise.all([
+        fetch(contentFile('trivia')).then((r) => r.json()),
+        fetch(contentFile('story')).then((r) => r.json()),
+        fetch(contentFile('coach')).then((r) => r.json()),
+        fetch(contentFile('scenarios')).then((r) => r.json())
+      ]);
+      if (token !== loadToken) return;
+
+      TRIVIA_BANK = triviaData.questions;
+      CPRHero.trivia.bank = TRIVIA_BANK;
+      NARRATIVE_BEATS = storyData.beats;
+      call911Prompt = storyData.call911Prompt || call911Prompt;
+      if (!window.CoachPulse) window.CoachPulse = CPRHero.createCoach(coachData);
+      else CoachPulse.setPack(coachData);
+      if (!scenarioEngine) scenarioEngine = CPRHero.createScenarioEngine(scenarioData);
+      else scenarioEngine.setPack(scenarioData);
+    }
+
+    function applyRuntimeLanguage() {
+      updateCompressLabel();
+      if (boardFailed) showOfflineLeaderboard();
+      else if (lastBoardEntries) renderLeaderboard(lastBoardEntries);
+      if (state === STATE.NARRATIVE) showNarrativeBeat();
+      if (state === STATE.TRIVIA && !triviaAnimating) {
+        fillTriviaOptions(CPRHero.trivia.currentQuestion());
+      }
+      if (state === STATE.RESULTS && lastReport) paintScoreReport(lastReport);
+      if (scenarioEngine && state === STATE.SCENARIO) {
+        const snap = scenarioEngine.snapshot();
+        if (snap.node && !snap.resolved) {
+          scenarioEngine.clearHistory();
+          renderScenarioNode(scenarioEngine.snapshot());
+        } else {
+          updateScenarioHud(snap);
+          renderScenarioLog(snap.history);
+          if (!scenarioOptions.classList.contains('hidden')) {
+            showScenarioChoices(snap.options);
+          }
+        }
+      }
+      if (state === STATE.SCENARIO_RESULTS && scenarioEngine) {
+        fillScenarioReport(scenarioEngine.report());
+      }
+      if (window.CoachPulse && CoachPulse.retell) CoachPulse.retell(state);
+    }
+
+    if (CPRHero.i18n) {
+      let appliedLang = CPRHero.i18n.lang();
+      CPRHero.i18n.onChange(() => {
+        syncSound();
+        if (CPRHero.i18n.lang() === appliedLang) return;
+        appliedLang = CPRHero.i18n.lang();
+        loadLocalizedContent().then(applyRuntimeLanguage).catch(() => applyRuntimeLanguage());
+      });
+    }
+
+    Promise.all([
+      loadLocalizedContent(),
+      CPRHero.Gfx.load()
+    ]).then(() => {
       fetchGlobalLeaderboard().then(renderLeaderboard).catch(() => {
-        leaderboardList.innerHTML = '<li><span>Leaderboard loads when server is running</span><span></span></li>';
+        showOfflineLeaderboard();
       });
       requestAnimationFrame(gameLoop);
     }).catch((err) => {

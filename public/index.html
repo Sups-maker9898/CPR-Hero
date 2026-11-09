@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
   <title>CPR HERO</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -26,16 +26,19 @@
        This is the first screen players see.
   ========================================================== -->
   <header>
-    <h1>CPR HERO</h1>
-    <p>Learn life-saving CPR rhythm. Keep them alive until help arrives.</p>
-    <p id="pwa-hint">On your phone: tap Share or the browser menu, then Add to Home Screen to use this like an app.</p>
+    <div class="header-row">
+      <h1>CPR HERO</h1>
+      <button type="button" id="settings-btn" class="retro-btn secondary" data-i18n="settings">SETTINGS</button>
+    </div>
+    <p data-i18n="tagline">Learn life-saving CPR rhythm. Keep them alive until help arrives.</p>
+    <p id="pwa-hint" data-i18n="pwaHint">On your phone: tap Share or the browser menu, then Add to Home Screen to use this like an app.</p>
   </header>
 
   <!-- Leaderboard panel (Phase 1 uses local placeholder data) -->
   <div id="leaderboard-panel">
     <div id="leaderboard-head">
-      <h3>-- LEADERBOARD --</h3>
-      <button type="button" id="board-play-btn" class="retro-btn">PLAY</button>
+      <h3 data-i18n="leaderboard">-- LEADERBOARD --</h3>
+      <button type="button" id="board-play-btn" class="retro-btn" data-i18n="play">PLAY</button>
     </div>
     <ul id="leaderboard-list">
       <li><span>Play a round to see scores here!</span><span></span></li>
@@ -45,39 +48,39 @@
   <div id="game-container">
     <div id="canvas-stage">
     <!-- HTML5 Canvas = our 2D drawing board -->
-    <canvas id="game-canvas" width="800" height="600" tabindex="0" aria-label="CPR HERO game canvas — press Spacebar or click to compress"></canvas>
+    <canvas id="game-canvas" width="800" height="600" tabindex="0" data-i18n-aria="canvasAria" aria-label="CPR HERO game canvas — press Spacebar or click to compress"></canvas>
     <p id="timing-live" class="timing-live" aria-live="polite"></p>
-    <button type="button" id="scenario-exit-btn" class="retro-btn secondary" aria-label="Main Screen">
-      <span class="back-arrow" aria-hidden="true"></span>MAIN SCREEN
+    <button type="button" id="scenario-exit-btn" class="retro-btn secondary" data-i18n-aria="mainScreen" aria-label="Main Screen">
+      <span class="back-arrow" aria-hidden="true"></span><span data-i18n="mainScreen">MAIN SCREEN</span>
     </button>
-    <div id="game-exit-confirm" class="hidden" role="alertdialog" aria-label="Leave game">
-      <p>Are you sure?</p>
-      <button type="button" id="game-exit-yes" class="retro-btn">YES</button>
-      <button type="button" id="game-exit-no" class="retro-btn secondary">NO</button>
+    <div id="game-exit-confirm" class="hidden" role="alertdialog" data-i18n-aria="leaveGame" aria-label="Leave game">
+      <p data-i18n="areYouSure">Are you sure?</p>
+      <button type="button" id="game-exit-yes" class="retro-btn" data-i18n="yes">YES</button>
+      <button type="button" id="game-exit-no" class="retro-btn secondary" data-i18n="no">NO</button>
     </div>
 
     <!-- START / LOGIN OVERLAY -->
     <div id="start-overlay" class="overlay active">
-      <h2>ENTER YOUR HERO NAME</h2>
-      <p>Keep the patient alive until the ambulance arrives.</p>
-      <label for="player-name">HERO NAME</label>
-      <input id="player-name" class="retro-input" maxlength="20" placeholder="Your name..." aria-label="Player name">
-      <button id="start-btn" class="retro-btn">START MISSION</button>
-      <button id="scenario-btn" class="retro-btn secondary">SCENARIO MODE</button>
+      <h2 data-i18n="enterName">ENTER YOUR HERO NAME</h2>
+      <p data-i18n="keepAlive">Keep the patient alive until the ambulance arrives.</p>
+      <label for="player-name" data-i18n="heroName">HERO NAME</label>
+      <input id="player-name" class="retro-input" maxlength="20" data-i18n-placeholder="namePlaceholder" data-i18n-aria="playerNameAria" placeholder="Your name..." aria-label="Player name">
+      <button id="start-btn" class="retro-btn" data-i18n="startMission">START MISSION</button>
+      <button id="scenario-btn" class="retro-btn secondary" data-i18n="scenarioMode">SCENARIO MODE</button>
     </div>
 
     <!-- INTRO STORY OVERLAY -->
     <div id="narrative-overlay" class="overlay">
       <h2 id="narrative-text"></h2>
-      <button id="narrative-btn" class="retro-btn secondary">CONTINUE</button>
-      <button id="call911-btn" class="retro-btn call911 hidden">TAP TO CALL 911</button>
+      <button id="narrative-btn" class="retro-btn secondary" data-i18n="continue">CONTINUE</button>
+      <button id="call911-btn" class="retro-btn call911 hidden" data-i18n="call911">TAP TO CALL 911</button>
     </div>
 
     <p id="countdown-announce" aria-live="assertive"></p>
 
     <!-- TRIVIA SAFETY NET OVERLAY -->
     <div id="trivia-overlay" class="overlay">
-      <h2>FIRST AID TRIVIA</h2>
+      <h2 data-i18n="triviaTitle">FIRST AID TRIVIA</h2>
       <p id="trivia-lives"></p>
       <p id="trivia-question" style="color: var(--yellow); line-height: 1.8;"></p>
       <div id="trivia-feedback" aria-live="polite"></div>
@@ -86,21 +89,21 @@
 
     <!-- WIN OVERLAY -->
     <div id="win-overlay" class="overlay">
-      <h2>AMBULANCE ARRIVED!</h2>
-      <p>You kept them alive. Paramedic gives a thumbs-up!</p>
+      <h2 data-i18n="winTitle">AMBULANCE ARRIVED!</h2>
+      <p data-i18n="winBody">You kept them alive. Paramedic gives a thumbs-up!</p>
     </div>
 
     <!-- LOSE OVERLAY -->
     <div id="gameover-overlay" class="overlay">
-      <h2>GAME OVER</h2>
-      <p>Every second counts. Practice makes perfect.</p>
+      <h2 data-i18n="gameOver">GAME OVER</h2>
+      <p data-i18n="gameOverBody">Every second counts. Practice makes perfect.</p>
     </div>
 
     <!-- RESULTS OVERLAY -->
     <div id="results-overlay" class="overlay">
-      <h2>MISSION REPORT</h2>
+      <h2 data-i18n="missionReport">MISSION REPORT</h2>
       <div id="score-breakdown"></div>
-      <button id="retry-btn" class="retro-btn">TRY AGAIN</button>
+      <button id="retry-btn" class="retro-btn" data-i18n="tryAgain">TRY AGAIN</button>
     </div>
 
     <!-- EMERGENCY SCENARIO MODE — dialogue visual novel -->
@@ -110,12 +113,12 @@
         <span id="scenario-xp">XP 0</span>
         <span id="scenario-progress">STEP 1 / 6</span>
         <span id="scenario-step-label">SCENE</span>
-        <button type="button" id="scenario-log-btn" class="retro-btn secondary">LOG</button>
+        <button type="button" id="scenario-log-btn" class="retro-btn secondary" data-i18n="log">LOG</button>
       </div>
-      <div id="scenario-exit-confirm" class="hidden" role="alertdialog" aria-label="Leave scenario">
-        <p>Are you sure?</p>
-        <button type="button" id="scenario-exit-yes" class="retro-btn">YES</button>
-        <button type="button" id="scenario-exit-no" class="retro-btn secondary">NO</button>
+      <div id="scenario-exit-confirm" class="hidden" role="alertdialog" data-i18n-aria="leaveScenario" aria-label="Leave scenario">
+        <p data-i18n="areYouSure">Are you sure?</p>
+        <button type="button" id="scenario-exit-yes" class="retro-btn" data-i18n="yes">YES</button>
+        <button type="button" id="scenario-exit-no" class="retro-btn secondary" data-i18n="no">NO</button>
       </div>
       <div id="scenario-log" class="hidden" aria-label="Conversation history"></div>
       <div id="scenario-dialog">
@@ -129,61 +132,93 @@
       </div>
       <div id="scenario-options"></div>
       <div id="scenario-actions">
-        <button type="button" id="scenario-continue-btn" class="retro-btn">CONTINUE</button>
-        <button type="button" id="scenario-hint-btn" class="retro-btn secondary">HINT</button>
-        <button type="button" id="scenario-restart-btn" class="retro-btn secondary">RESTART</button>
+        <button type="button" id="scenario-continue-btn" class="retro-btn" data-i18n="continue">CONTINUE</button>
+        <button type="button" id="scenario-hint-btn" class="retro-btn secondary" data-i18n="hint">HINT</button>
+        <button type="button" id="scenario-restart-btn" class="retro-btn secondary" data-i18n="restart">RESTART</button>
       </div>
       </div>
     </div>
 
     <div id="scenario-results-overlay" class="overlay">
-      <h2>SCENARIO COMPLETE</h2>
+      <h2 data-i18n="scenarioComplete">SCENARIO COMPLETE</h2>
       <div id="scenario-report"></div>
-      <button type="button" id="scenario-playagain-btn" class="retro-btn">PLAY AGAIN</button>
-      <button type="button" id="scenario-menu-btn" class="retro-btn secondary">MAIN MENU</button>
+      <button type="button" id="scenario-playagain-btn" class="retro-btn" data-i18n="playAgain">PLAY AGAIN</button>
+      <button type="button" id="scenario-menu-btn" class="retro-btn secondary" data-i18n="mainMenu">MAIN MENU</button>
     </div>
     </div><!-- /canvas-stage -->
-    <p id="touch-hint">TAP THE SCREEN TO COMPRESS</p>
-    <button type="button" id="compress-btn" aria-label="Compress chest — Spacebar or click">COMPRESS — SPACEBAR / CLICK</button>
+    <p id="touch-hint" data-i18n="touchHint">TAP THE SCREEN TO COMPRESS</p>
+    <button type="button" id="compress-btn" data-i18n-aria="compressAria" aria-label="Compress chest — Spacebar or click">COMPRESS — SPACEBAR / CLICK</button>
   </div>
 
   </div><!-- /main-column -->
 
   <!-- AI MEDICAL COACH — stays open for the entire game -->
-  <aside id="ai-assistant" aria-label="CPR training assistant">
+  <aside id="ai-assistant" data-i18n-aria="coachAria" aria-label="CPR training assistant">
     <div class="assistant-header">
       <div class="assistant-avatar" aria-hidden="true"><img src="/img/coach.png" alt=""></div>
       <div class="assistant-title">
-        COACH PULSE
-        <span>CPR & First Aid Guide</span>
+        <span data-i18n="coachName">COACH PULSE</span>
+        <span class="coach-sub" data-i18n="coachSubtitle">CPR & First Aid Guide</span>
       </div>
-      <button type="button" id="mobile-coach-close" aria-label="Close coach and return to game">X</button>
+      <button type="button" id="mobile-coach-close" data-i18n-aria="closeCoach" aria-label="Close coach and return to game">X</button>
     </div>
     <div id="assistant-chat" aria-live="polite"></div>
-    <p id="assistant-typing" class="chat-typing">Coach Pulse is typing...</p>
+    <p id="assistant-typing" class="chat-typing" data-i18n="coachTyping">Coach Pulse is typing...</p>
     <div id="assistant-quick-topics">
-      <button type="button" class="topic-chip" data-topic="tutorial">Tutorial</button>
-      <button type="button" class="topic-chip" data-topic="cpr">CPR Basics</button>
-      <button type="button" class="topic-chip" data-topic="game">How to Play</button>
-      <button type="button" class="topic-chip" data-topic="firstaid">First Aid</button>
-      <button type="button" class="topic-chip" data-topic="emergency">Call 911</button>
-      <button type="button" class="topic-chip" data-topic="scenario">Scenario</button>
+      <button type="button" class="topic-chip" data-topic="tutorial" data-i18n="topicTutorial">Tutorial</button>
+      <button type="button" class="topic-chip" data-topic="cpr" data-i18n="topicCpr">CPR Basics</button>
+      <button type="button" class="topic-chip" data-topic="game" data-i18n="topicGame">How to Play</button>
+      <button type="button" class="topic-chip" data-topic="firstaid" data-i18n="topicFirstaid">First Aid</button>
+      <button type="button" class="topic-chip" data-topic="emergency" data-i18n="topicEmergency">Call 911</button>
+      <button type="button" class="topic-chip" data-topic="scenario" data-i18n="topicScenario">Scenario</button>
     </div>
     <div id="assistant-input-row">
-      <input id="assistant-input" type="text" maxlength="120" placeholder="Ask about CPR..." aria-label="Ask Coach Pulse a question">
-      <button id="assistant-send" type="button" aria-label="Send message">SEND</button>
+      <input id="assistant-input" type="text" maxlength="120" data-i18n-placeholder="askPlaceholder" data-i18n-aria="askAria" placeholder="Ask about CPR..." aria-label="Ask Coach Pulse a question">
+      <button id="assistant-send" type="button" data-i18n="send" data-i18n-aria="sendAria" aria-label="Send message">SEND</button>
     </div>
   </aside>
 
-  <nav id="mobile-tabbar" aria-label="Phone app screens">
-    <button type="button" id="tab-game" class="mobile-tab active" aria-selected="true">PLAY</button>
-    <button type="button" id="tab-board" class="mobile-tab" aria-selected="false" aria-label="Leaderboard">BOARD</button>
-    <button type="button" id="tab-coach" class="mobile-tab" aria-selected="false">COACH</button>
+  <nav id="mobile-tabbar" data-i18n-aria="phoneNav" aria-label="Phone app screens">
+    <button type="button" id="tab-game" class="mobile-tab active" aria-selected="true" data-i18n="tabPlay">PLAY</button>
+    <button type="button" id="tab-board" class="mobile-tab" aria-selected="false" data-i18n="tabBoard" data-i18n-aria="tabBoardAria" aria-label="Leaderboard">BOARD</button>
+    <button type="button" id="tab-coach" class="mobile-tab" aria-selected="false" data-i18n="tabCoach">COACH</button>
   </nav>
 
   </div><!-- /app-layout -->
 
-  
+  <div id="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div class="tutorial-card">
+      <p id="tutorial-kicker" class="settings-label"></p>
+      <h2 id="tutorial-title"></h2>
+      <div id="tutorial-body"></div>
+      <div id="tutorial-actions" class="settings-row"></div>
+    </div>
+  </div>
+
+  <div id="settings-panel" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-card">
+      <h2 id="settings-title" data-i18n="settings">SETTINGS</h2>
+      <p class="settings-label" data-i18n="language">LANGUAGE</p>
+      <div class="settings-row">
+        <button type="button" id="lang-en" class="retro-btn secondary">ENGLISH</button>
+        <button type="button" id="lang-ko" class="retro-btn secondary">한국어</button>
+      </div>
+      <p class="settings-label" data-i18n="appearance">APPEARANCE</p>
+      <div class="settings-row">
+        <button type="button" id="theme-day" class="retro-btn secondary" data-i18n="day">DAY</button>
+        <button type="button" id="theme-night" class="retro-btn secondary" data-i18n="night">NIGHT</button>
+      </div>
+      <p class="settings-label" data-i18n="volume">VOLUME</p>
+      <div class="settings-row">
+        <button type="button" id="sound-unmute" class="retro-btn secondary" data-i18n="unmute">UNMUTE</button>
+        <button type="button" id="sound-mute" class="retro-btn secondary" data-i18n="mute">MUTE</button>
+      </div>
+      <button type="button" id="tutorial-replay" class="retro-btn secondary" data-i18n="tutorialReplay">REPLAY TUTORIAL</button>
+      <button type="button" id="settings-close" class="retro-btn" data-i18n="close">CLOSE</button>
+    </div>
+  </div>
+
+  <script src="/js/i18n.js"></script>
   <script src="/js/leaderboard.js"></script>
   <script src="/js/rhythm.js"></script>
   <script src="/js/trivia.js"></script>
@@ -191,5 +226,6 @@
   <script src="/js/sprites.js"></script>
   <script src="/js/scenario.js"></script>
   <script src="/js/game.js"></script>
+  <script src="/js/tutorial.js"></script>
 </body>
 </html>

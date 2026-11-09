@@ -18,10 +18,30 @@
       --green: #4ecca3;
       --yellow: #f5c518;
       --red: #ff4444;
+      --font: 'Press Start 2P', 'Jua', monospace;
+      --muted: #888;
+      --soft-text: #ccc;
+      --panel: rgba(15, 52, 96, 0.45);
+      --overlay: rgba(26, 26, 46, 0.93);
+      --coach-bg: rgba(8, 12, 28, 0.97);
+      --input-bg: #0a0a1a;
+      --chat-bot: #dceee6;
+      --line: rgba(255, 255, 255, 0.08);
+      --scanline: rgba(0, 0, 0, 0.07);
+      --tabbar: #0a0a1a;
+      --mobile-bg: #12122a;
+      --hud-bg: rgba(12, 8, 32, 0.92);
+      --dialog-bg: #081018;
+      --dialog-text: #f4f0e0;
+      --step-label: #c9b8ff;
+    }
+
+    html[lang="ko"] {
+      --font: 'Jua', sans-serif;
     }
 
     body {
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -33,7 +53,7 @@
     #app-layout {
       display: flex;
       width: 100%;
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 0 10px 24px;
       gap: 14px;
@@ -64,8 +84,8 @@
         0deg,
         transparent,
         transparent 2px,
-        rgba(0, 0, 0, 0.07) 2px,
-        rgba(0, 0, 0, 0.07) 4px
+        var(--scanline) 2px,
+        var(--scanline) 4px
       );
       pointer-events: none;
       z-index: 9999;
@@ -77,6 +97,25 @@
       width: 100%;
     }
 
+    .header-row {
+      position: relative;
+      width: 100%;
+    }
+
+    .header-row h1 {
+      padding: 0 108px;
+    }
+
+    #settings-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 5;
+      font-size: 7px;
+      padding: 8px 10px;
+      min-height: 36px;
+    }
+
     header h1 {
       font-size: clamp(14px, 4vw, 26px);
       color: var(--accent);
@@ -86,7 +125,7 @@
     header p {
       font-size: clamp(6px, 1.5vw, 9px);
       margin-top: 8px;
-      color: #888;
+      color: var(--muted);
       line-height: 1.8;
     }
 
@@ -126,7 +165,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(26, 26, 46, 0.93);
+      background: var(--overlay);
       z-index: 10;
       padding: 20px;
       text-align: center;
@@ -154,14 +193,14 @@
     .overlay p, .overlay label {
       font-size: clamp(6px, 1.4vw, 9px);
       line-height: 2;
-      color: #ccc;
+      color: var(--soft-text);
     }
 
     .retro-input {
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       font-size: clamp(8px, 2vw, 11px);
       padding: 12px 16px;
-      background: #0a0a1a;
+      background: var(--input-bg);
       border: 3px solid var(--accent2);
       color: var(--text);
       text-align: center;
@@ -175,7 +214,7 @@
     }
 
     .retro-btn {
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       font-size: clamp(7px, 1.7vw, 10px);
       padding: 14px 22px;
       background: var(--accent);
@@ -213,7 +252,7 @@
       max-width: 800px;
       margin: 0 auto 12px;
       border: 3px solid var(--accent2);
-      background: rgba(15, 52, 96, 0.45);
+      background: var(--panel);
       padding: 12px;
     }
 
@@ -245,7 +284,7 @@
     #leaderboard-list li {
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--line);
       padding: 2px 4px;
     }
 
@@ -400,7 +439,7 @@
       width: 100%;
       max-width: 800px;
       margin: 10px auto 0;
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       font-size: clamp(8px, 2vw, 11px);
       padding: 16px;
       background: var(--accent);
@@ -484,14 +523,14 @@
       margin-top: auto;
       font-size: clamp(6px, 1.4vw, 8px);
       color: var(--yellow);
-      border: 2px solid #2a1a5c;
-      background: rgba(12, 8, 32, 0.92);
+      border: 2px solid var(--accent2);
+      background: var(--hud-bg);
       padding: 8px 10px;
       box-shadow: 4px 4px 0 #000;
     }
 
     #scenario-xp { color: var(--green); }
-    #scenario-step-label { color: #c9b8ff; margin-left: auto; }
+    #scenario-step-label { color: var(--step-label); margin-left: auto; }
     #scenario-log-btn {
       flex: 0 0 auto;
       min-height: 36px;
@@ -599,8 +638,8 @@
       line-height: 1.7;
       padding: 8px;
       border: 2px solid var(--green);
-      background: rgba(6, 10, 20, 0.95);
-      color: #cde;
+      background: var(--hud-bg);
+      color: var(--dialog-text);
     }
 
     #scenario-log p { margin-bottom: 6px; }
@@ -615,7 +654,7 @@
       width: 100%;
       align-items: stretch;
       border: 3px solid #e8d5a3;
-      background: #081018;
+      background: var(--dialog-bg);
       box-shadow: 6px 6px 0 #000, inset 0 0 0 2px #3a2a10;
       padding: 8px;
       min-height: 92px;
@@ -661,7 +700,7 @@
     #scenario-line {
       font-size: clamp(6px, 1.4vw, 8px);
       line-height: 1.8;
-      color: #f4f0e0;
+      color: var(--dialog-text);
       text-align: left;
       min-height: 3.6em;
     }
@@ -723,17 +762,17 @@
        AI ASSISTANT PANEL (Coach Pulse — always visible)
     ========================================================== */
     #ai-assistant {
-      flex: 0 0 300px;
-      width: 300px;
+      flex: 0 0 340px;
+      width: 340px;
       max-width: 100%;
-      min-height: 520px;
+      min-height: 560px;
       max-height: calc(100vh - 24px);
       position: sticky;
       top: 12px;
       display: flex;
       flex-direction: column;
       border: 3px solid var(--green);
-      background: rgba(8, 12, 28, 0.97);
+      background: var(--coach-bg);
       box-shadow: 0 0 24px rgba(78, 204, 163, 0.15);
       z-index: 100;
     }
@@ -744,12 +783,12 @@
       gap: 10px;
       padding: 12px;
       border-bottom: 3px solid var(--accent2);
-      background: rgba(15, 52, 96, 0.6);
+      background: var(--panel);
     }
 
     .assistant-avatar {
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       border: 2px solid var(--green);
       background: #0f3460;
       display: flex;
@@ -761,7 +800,7 @@
     }
 
     .assistant-avatar img {
-      height: 44px;
+      height: 52px;
       width: auto;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -773,15 +812,15 @@
     }
 
     .assistant-title {
-      font-size: clamp(7px, 1.6vw, 9px);
+      font-size: clamp(9px, 1.8vw, 11px);
       color: var(--green);
       line-height: 1.6;
     }
 
-    .assistant-title span {
+    .assistant-title .coach-sub {
       display: block;
-      color: #888;
-      font-size: clamp(5px, 1.2vw, 7px);
+      color: var(--muted);
+      font-size: clamp(7px, 1.4vw, 8px);
       margin-top: 4px;
     }
 
@@ -796,8 +835,8 @@
     }
 
     .chat-msg {
-      font-size: clamp(5px, 1.2vw, 7px);
-      line-height: 1.9;
+      font-size: clamp(7px, 1.45vw, 9px);
+      line-height: 1.85;
       padding: 10px;
       border: 2px solid var(--accent2);
       max-width: 100%;
@@ -807,14 +846,14 @@
     .chat-msg.bot {
       background: rgba(15, 52, 96, 0.55);
       border-color: var(--green);
-      color: #dceee6;
+      color: var(--chat-bot);
       align-self: flex-start;
     }
 
     .chat-msg.user {
       background: rgba(233, 69, 96, 0.2);
       border-color: var(--accent);
-      color: #fff;
+      color: var(--text);
       align-self: flex-end;
     }
 
@@ -825,8 +864,8 @@
     }
 
     .chat-typing {
-      font-size: clamp(5px, 1.2vw, 7px);
-      color: #888;
+      font-size: clamp(7px, 1.4vw, 9px);
+      color: var(--muted);
       padding: 4px 10px;
       display: none;
     }
@@ -849,11 +888,11 @@
     }
 
     .topic-chip {
-      font-family: 'Press Start 2P', monospace;
-      font-size: clamp(4px, 1vw, 6px);
+      font-family: var(--font);
+      font-size: clamp(6px, 1.25vw, 8px);
       padding: 8px 8px;
       background: var(--accent2);
-      color: var(--text);
+      color: #fff;
       border: 2px solid #335588;
       cursor: pointer;
       line-height: 1.4;
@@ -873,10 +912,10 @@
 
     #assistant-input {
       flex: 1;
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       font-size: clamp(5px, 1.2vw, 7px);
       padding: 10px 8px;
-      background: #0a0a1a;
+      background: var(--input-bg);
       border: 2px solid var(--accent2);
       color: var(--text);
       outline: none;
@@ -888,7 +927,7 @@
     }
 
     #assistant-send {
-      font-family: 'Press Start 2P', monospace;
+      font-family: var(--font);
       font-size: clamp(5px, 1.2vw, 7px);
       padding: 10px 10px;
       background: var(--green);
@@ -912,7 +951,7 @@
         height: 100%;
         height: 100dvh;
         overflow: hidden;
-        background: #12122a;
+        background: var(--mobile-bg);
       }
 
       body {
@@ -1291,17 +1330,17 @@
         background: var(--accent2);
         color: #fff;
         border: 2px solid var(--green);
-        font-family: 'Press Start 2P', monospace;
+        font-family: var(--font);
         font-size: 10px;
         cursor: pointer;
       }
 
       .assistant-title {
-        font-size: 9px;
+        font-size: 11px;
       }
 
-      .assistant-title span {
-        font-size: 6px;
+      .assistant-title .coach-sub {
+        font-size: 8px;
       }
 
       #assistant-chat {
@@ -1311,12 +1350,12 @@
       .chat-msg,
       .chat-typing,
       #assistant-input {
-        font-size: 8px;
-        line-height: 1.7;
+        font-size: 10px;
+        line-height: 1.65;
       }
 
       .topic-chip {
-        font-size: 7px;
+        font-size: 8px;
         min-height: 40px;
         padding: 8px 10px;
       }
@@ -1330,7 +1369,7 @@
       }
 
       #assistant-send {
-        font-size: 8px;
+        font-size: 10px;
         min-width: 64px;
         min-height: 46px;
       }
@@ -1339,7 +1378,7 @@
         display: flex;
         flex-shrink: 0;
         width: 100%;
-        background: #0a0a1a;
+        background: var(--tabbar);
         border-top: 3px solid var(--accent2);
         padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
         gap: 8px;
@@ -1348,7 +1387,7 @@
 
       .mobile-tab {
         flex: 1;
-        font-family: 'Press Start 2P', monospace;
+        font-family: var(--font);
         font-size: 8px;
         min-height: 48px;
         background: var(--accent2);
@@ -1451,4 +1490,283 @@
         right: 72px;
         padding-bottom: 16px;
       }
+    }
+
+    #settings-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 4000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.55);
+    }
+
+    .settings-card {
+      width: min(460px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 16px;
+      text-align: center;
+      background: var(--bg);
+      color: var(--text);
+      border: 4px solid var(--accent);
+      box-shadow: 6px 6px 0 #000;
+    }
+
+    .settings-card h2 {
+      font-size: clamp(12px, 2.6vw, 16px);
+      color: var(--accent);
+      text-shadow: 2px 2px 0 #000;
+      line-height: 1.6;
+    }
+
+    .settings-label {
+      font-size: clamp(8px, 1.8vw, 10px);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .settings-row .retro-btn {
+      flex: 1 1 140px;
+    }
+
+    #settings-panel .retro-btn.is-selected {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--yellow);
+      outline: 2px solid var(--yellow);
+    }
+
+    html[lang="ko"] header p,
+    html[lang="ko"] .overlay p,
+    html[lang="ko"] .overlay label,
+    html[lang="ko"] .settings-label {
+      font-size: clamp(12px, 2.2vw, 15px);
+      line-height: 1.5;
+    }
+
+    html[lang="ko"] .overlay h2,
+    html[lang="ko"] .settings-card h2 {
+      font-size: clamp(16px, 3.2vw, 22px);
+      line-height: 1.4;
+    }
+
+    html[lang="ko"] .retro-btn,
+    html[lang="ko"] #settings-btn {
+      font-size: clamp(12px, 2.1vw, 14px);
+    }
+
+    html[lang="ko"] .retro-input,
+    html[lang="ko"] #assistant-input {
+      font-size: clamp(14px, 2.4vw, 16px);
+    }
+
+    html[lang="ko"] #leaderboard-panel h3,
+    html[lang="ko"] #leaderboard-list {
+      font-size: clamp(11px, 2vw, 13px);
+      line-height: 1.6;
+    }
+
+    html[lang="ko"] #trivia-options .retro-btn,
+    html[lang="ko"] #scenario-options .retro-btn,
+    html[lang="ko"] #scenario-line,
+    html[lang="ko"] #scenario-speaker,
+    html[lang="ko"] #scenario-hud,
+    html[lang="ko"] #scenario-log,
+    html[lang="ko"] #scenario-report {
+      font-size: clamp(12px, 2vw, 15px);
+      line-height: 1.5;
+    }
+
+    html[lang="ko"] .chat-msg,
+    html[lang="ko"] .chat-typing,
+    html[lang="ko"] #assistant-send,
+    html[lang="ko"] .topic-chip {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    html[lang="ko"] .assistant-title {
+      font-size: 16px;
+    }
+
+    html[lang="ko"] .assistant-title .coach-sub {
+      font-size: 13px;
+    }
+
+    html[lang="ko"] .mobile-tab {
+      font-size: 13px;
+    }
+
+    #tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 4500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.55);
+    }
+
+    #tutorial-overlay.active { display: flex; }
+
+    .tutorial-card {
+      width: min(520px, 100%);
+      max-height: min(92vh, 720px);
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 14px;
+      text-align: center;
+      background: var(--bg);
+      color: var(--text);
+      border: 4px solid var(--accent);
+      box-shadow: 6px 6px 0 #000;
+    }
+
+    .tutorial-card h2 {
+      font-size: clamp(14px, 3vw, 20px);
+      color: var(--accent);
+      text-shadow: 2px 2px 0 #000;
+      line-height: 1.5;
+    }
+
+    .tutorial-card p {
+      font-size: clamp(11px, 2.2vw, 14px);
+      line-height: 1.55;
+      max-width: 46ch;
+    }
+
+    .tutorial-keys {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tutorial-keys kbd {
+      min-width: 88px;
+      padding: 10px 12px;
+      border: 3px solid var(--accent);
+      background: var(--input-bg);
+      color: var(--yellow);
+      font-family: inherit;
+      font-size: clamp(12px, 2.4vw, 16px);
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .tutorial-samples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .tutorial-sample {
+      padding: 8px 10px;
+      border: 3px solid currentColor;
+      line-height: 1.45;
+      font-size: clamp(11px, 2.1vw, 13px);
+    }
+
+    .tutorial-sample.is-perfect { color: var(--green); }
+    .tutorial-sample.is-good { color: var(--yellow); }
+    .tutorial-sample.is-miss { color: var(--red); }
+
+    .tutorial-ring-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 4px auto;
+      flex: 0 0 auto;
+    }
+
+    .tutorial-ring,
+    .tutorial-ring-target {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .tutorial-ring-target {
+      width: 56px;
+      height: 56px;
+      border: 3px solid rgba(78, 204, 163, 0.9);
+    }
+
+    .tutorial-ring {
+      border: 4px solid #e94560;
+      width: 150px;
+      height: 150px;
+    }
+
+    .tutorial-heart {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      background: #e94560;
+      transform: translate(-50%, -60%) rotate(45deg);
+    }
+
+    .tutorial-heart::before,
+    .tutorial-heart::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #e94560;
+      border-radius: 50%;
+    }
+
+    .tutorial-heart::before { left: -7px; }
+    .tutorial-heart::after { top: -7px; }
+
+    .tutorial-feedback {
+      min-height: 3.2em;
+      font-size: clamp(12px, 2.4vw, 15px);
+    }
+
+    .tutorial-feedback.is-perfect { color: var(--green); }
+    .tutorial-feedback.is-good { color: var(--yellow); }
+    .tutorial-feedback.is-miss { color: var(--red); }
+
+    html[data-theme="day"] #tutorial-overlay {
+      --bg: #f4efe4;
+      --text: #2a1c22;
+      --accent: #c4324c;
+      --muted: #6a5c54;
+      --yellow: #8a6400;
+      --green: #0d7a62;
+      --red: #c62828;
+      --input-bg: #fffaf3;
+    }
+
+    html[data-theme="day"] #tutorial-overlay .tutorial-ring-target {
+      border-color: #0d7a62;
+    }
+
+    @media (max-width: 640px) {
+      #tutorial-overlay { padding: 10px; }
+      .tutorial-card { padding: 12px 10px; gap: 10px; }
+      .tutorial-ring-wrap { width: 140px; height: 140px; }
+      #tutorial-overlay .retro-btn { flex: 1 1 100%; }
     }
