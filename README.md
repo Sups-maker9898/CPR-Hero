@@ -23,8 +23,6 @@ npm install
 npm start
 ```
 
-Open [http://localhost:8000](http://localhost:8000) in your browser.
-
 ## Project files
 
 | Path | Role |
@@ -52,9 +50,6 @@ Requires Python 3.9+ and a [Gemini API key](https://aistudio.google.com/apikey).
 
 ```bash
 copy .env.example .env
-```
-
-Put your key in `.env` as `GEMINI_API_KEY=...`, then in a second terminal:
 
 ```bash
 py -3 -m venv python/.venv
