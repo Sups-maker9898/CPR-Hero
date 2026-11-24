@@ -23,6 +23,65 @@ CPRHero.rhythm = {
     return 'MISS';
   },
 
+  // Survival tuning only. The 110 BPM beat and the perfect/good windows stay put.
+  // The first miss in a row is a stumble. Each further miss in that row costs more,
+  // so a lost rhythm still threatens a life. A good or perfect press clears the row.
+  compressionTuning: {
+    goodOxygenRestore: 8,
+    missOxygenSteps: [8, 12, 18]
+  },
+
+  missOxygenPenalty(consecutiveMisses) {
+    const steps = this.compressionTuning.missOxygenSteps;
+    const index = Math.min(Math.max(consecutiveMisses, 1), steps.length) - 1;
+    return steps[index];
+  },
+
+  applyCompressionOutcome(oxygen, tier, consecutiveMisses) {
+    if (tier === 'PERFECT') {
+      return { oxygen: 100, consecutiveMisses: 0 };
+    }
+    if (tier === 'GOOD') {
+      return {
+        oxygen: Math.min(100, oxygen + this.compressionTuning.goodOxygenRestore),
+        consecutiveMisses: 0
+      };
+    }
+    const nextMisses = (consecutiveMisses || 0) + 1;
+    return {
+      oxygen: Math.max(0, oxygen - this.missOxygenPenalty(nextMisses)),
+      consecutiveMisses: nextMisses
+    };
+  },
+
+  // One judgment per beat. An extra tap on a beat that was already judged is not
+  // another miss. A tap that lands in the next beat's window counts for that beat.
+  resolveTap(opts) {
+    const interval = opts.interval;
+    const goodWindow = opts.goodWindow;
+    const beatIndex = opts.beatIndex;
+    const nextIndex = beatIndex + 1;
+    const nextExpected = this.getExpectedBeatTime(opts.beatStartTime, nextIndex, interval);
+    const nextDelta = Math.abs(opts.inputTime - nextExpected);
+
+    let target = beatIndex;
+    if (opts.beatHandled) {
+      if (opts.prehandledBeat === nextIndex) return null;
+      if (nextDelta > goodWindow) return null;
+      target = nextIndex;
+    } else {
+      const expected = this.getExpectedBeatTime(opts.beatStartTime, beatIndex, interval);
+      const pastCurrentWindow = opts.inputTime > expected + goodWindow;
+      if (pastCurrentWindow && nextDelta <= goodWindow) target = nextIndex;
+    }
+
+    const expected = this.getExpectedBeatTime(opts.beatStartTime, target, interval);
+    return {
+      beatIndex: target,
+      tier: this.classifyHit(Math.abs(opts.inputTime - expected), opts.perfectWindow, goodWindow)
+    };
+  },
+
   ringRadius(maxRadius, targetRadius, progress) {
     return maxRadius - progress * (maxRadius - targetRadius);
   },

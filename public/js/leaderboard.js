@@ -11,13 +11,19 @@ CPRHero.leaderboard = {
     const empty = (labels && labels.empty) || 'No scores yet. Be the first hero!';
     const pts = (labels && labels.pts) || 'pts';
     if (!entries || entries.length === 0) {
-      listEl.innerHTML = '<li><span>' + this.escapeHtml(empty) + '</span><span></span></li>';
+      listEl.innerHTML = '<li class="board-empty"><span class="board-name">' + this.escapeHtml(empty) + '</span></li>';
       return;
     }
 
-    listEl.innerHTML = entries.map((entry, index) =>
-      `<li><span>#${index + 1} ${this.escapeHtml(entry.name)}</span><span>${entry.score} ${this.escapeHtml(pts)}</span></li>`
-    ).join('');
+    listEl.innerHTML = entries.map((entry, index) => {
+      const rank = index + 1;
+      const tier = rank <= 3 ? ' tier-' + rank : '';
+      return '<li class="board-row' + tier + '">'
+        + '<span class="board-place">' + rank + '</span>'
+        + '<span class="board-name">' + this.escapeHtml(entry.name) + '</span>'
+        + '<span class="board-score">' + entry.score + ' ' + this.escapeHtml(pts) + '</span>'
+        + '</li>';
+    }).join('');
   },
 
   async fetch() {

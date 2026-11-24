@@ -17,6 +17,33 @@
     const ctx = canvas.getContext('2d');
     const CW = canvas.width;   // 800 pixels wide
     const CH = canvas.height;  // 600 pixels tall
+    let canvasDisplayScale = 1;
+
+    function measureCanvasScale() {
+      const rect = canvas.getBoundingClientRect();
+      canvasDisplayScale = rect.width > 0 ? rect.width / CW : 1;
+    }
+
+    function syncVisualViewport() {
+      const vv = window.visualViewport;
+      const height = vv ? vv.height : window.innerHeight;
+      const offset = vv ? vv.offsetTop : 0;
+      const root = document.documentElement;
+      root.style.setProperty('--app-height', Math.round(height) + 'px');
+      root.style.setProperty('--app-offset', Math.round(offset) + 'px');
+      measureCanvasScale();
+    }
+
+    syncVisualViewport();
+    window.addEventListener('resize', syncVisualViewport);
+    window.addEventListener('orientationchange', syncVisualViewport);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncVisualViewport);
+      window.visualViewport.addEventListener('scroll', syncVisualViewport);
+    }
+    if (window.ResizeObserver) {
+      new ResizeObserver(measureCanvasScale).observe(canvas);
+    }
 
     // --- DOM REFERENCES (HTML elements we control with JavaScript) ---
     const overlays = {
@@ -84,7 +111,7 @@
     const BEAT_INTERVAL = 60000 / BPM; // 545.45ms between beats
     const PERFECT_WINDOW = 65;       // ±65ms = PERFECT
     const GOOD_WINDOW = 130;         // ±130ms = GOOD
-    const GAME_DURATION_MS = 120000; // 2-minute ambulance timer
+    const GAME_DURATION_MS = 150000; // 2:30 ambulance timer (30s / 25% longer)
     const MAX_LIVES = 3;
     const STREAK_MULTIPLIER_AT = 10; // 2x points after 10 perfect hits in a row
 
@@ -131,6 +158,8 @@
     let beatStartTime = 0;
     let currentBeatIndex = 0;
     let beatInputHandled = false;
+    let prehandledBeat = -1;
+    let consecutiveMisses = 0;
     let ringProgress = 0;
     let beatPulse = 0;
     let lastHitFeedback = { text: '', color: '', time: 0 };
@@ -213,6 +242,7 @@
       if (screen === 'board') {
         fetchGlobalLeaderboard().then(renderLeaderboard).catch(() => {});
       }
+      requestAnimationFrame(syncVisualViewport);
     }
 
     tabGame.addEventListener('click', () => showMobileScreen('game'));
@@ -220,6 +250,14 @@
     tabCoach.addEventListener('click', () => showMobileScreen('coach'));
     boardPlayBtn.addEventListener('click', () => showMobileScreen('game'));
     mobileCoachClose.addEventListener('click', () => showMobileScreen('game'));
+
+    const assistantInput = document.getElementById('assistant-input');
+    if (assistantInput) {
+      assistantInput.addEventListener('focus', () => {
+        setTimeout(syncVisualViewport, 60);
+        setTimeout(() => assistantInput.scrollIntoView({ block: 'nearest' }), 280);
+      });
+    }
 
     // --- SIMPLE WEB AUDIO BEEPS (no external sound files in Phase 1) ---
     let audioCtx = null;
@@ -304,7 +342,7 @@
     function showOfflineLeaderboard() {
       boardFailed = true;
       lastBoardEntries = null;
-      leaderboardList.innerHTML = '<li><span>' + escapeHtml(tr('leaderboardOffline')) + '</span><span></span></li>';
+      leaderboardList.innerHTML = '<li class="board-empty"><span class="board-name">' + escapeHtml(tr('leaderboardOffline')) + '</span></li>';
     }
 
     function escapeHtml(str) {
@@ -410,6 +448,8 @@
       streakMultiplierPerfects = 0;
       currentBeatIndex = 0;
       beatInputHandled = false;
+      prehandledBeat = -1;
+      consecutiveMisses = 0;
       ringProgress = 0;
       beatPulse = 0;
       CPRHero.trivia.reset();
@@ -462,6 +502,8 @@
       beatStartTime = performance.now();
       currentBeatIndex = 0;
       beatInputHandled = false;
+      prehandledBeat = -1;
+      consecutiveMisses = 0;
       ringProgress = 0;
       armTimingWindow();
       updateCompressControls();
@@ -473,21 +515,34 @@
     }
 
     function evaluateInput(inputTime) {
-      const expected = getExpectedBeatTime(currentBeatIndex);
-      const delta = Math.abs(inputTime - expected);
+      const resolved = CPRHero.rhythm.resolveTap({
+        inputTime: inputTime,
+        beatStartTime: beatStartTime,
+        beatIndex: currentBeatIndex,
+        beatHandled: beatInputHandled,
+        prehandledBeat: prehandledBeat,
+        interval: BEAT_INTERVAL,
+        perfectWindow: PERFECT_WINDOW,
+        goodWindow: GOOD_WINDOW
+      });
+      if (!resolved) return;
 
-      const tier = CPRHero.rhythm.classifyHit(delta, PERFECT_WINDOW, GOOD_WINDOW);
-
-      applyHitResult(tier);
-      beatInputHandled = true;
+      applyHitResult(resolved.tier);
+      if (resolved.beatIndex === currentBeatIndex) {
+        beatInputHandled = true;
+      } else {
+        prehandledBeat = resolved.beatIndex;
+      }
     }
 
     function applyHitResult(tier) {
       const now = performance.now();
+      const outcome = CPRHero.rhythm.applyCompressionOutcome(oxygen, tier, consecutiveMisses);
+      oxygen = outcome.oxygen;
+      consecutiveMisses = outcome.consecutiveMisses;
 
       if (tier === 'PERFECT') {
         perfectCompressions++;
-        oxygen = 100; // perfect hit restores / maintains full oxygen
         streak++;
 
         const pts = getPerfectPoints();
@@ -509,7 +564,6 @@
 
       if (tier === 'GOOD') {
         goodCompressions++;
-        oxygen = Math.min(100, oxygen + 4);
         streak = 0;
         lastHitFeedback = { text: tr('good'), color: '#f5c518', time: now };
         playTone(440, 0.08, 'triangle', 0.06);
@@ -517,7 +571,6 @@
 
       if (tier === 'MISS') {
         misses++;
-        oxygen = Math.max(0, oxygen - 15);
         streak = 0;
         lastHitFeedback = { text: tr('miss'), color: '#ff4444', time: now };
         playTone(110, 0.14, 'sawtooth', 0.07);
@@ -544,7 +597,8 @@
       const nextBeatTime = getExpectedBeatTime(currentBeatIndex + 1);
       if (now >= nextBeatTime) {
         currentBeatIndex++;
-        beatInputHandled = false;
+        beatInputHandled = prehandledBeat === currentBeatIndex;
+        if (beatInputHandled) prehandledBeat = -1;
         beatPulse = 1;
         playTone(220, 0.05, 'square', 0.04);
       }
@@ -1341,19 +1395,30 @@
 
     function drawTimingRing() {
       const radius = CPRHero.rhythm.ringRadius(RING_MAX_RADIUS, RING_TARGET_RADIUS, ringProgress);
+      const compact = canvasDisplayScale < 0.85;
+      const scale = Math.max(canvasDisplayScale, 0.28);
+      const targetWidth = compact ? Math.max(3, Math.round(3.5 / scale)) : 3;
+      const ringWidth = compact ? Math.max(4, Math.round(5 / scale)) : 4;
+
+      if (compact) {
+        ctx.beginPath();
+        ctx.arc(CENTER_X, CENTER_Y, RING_TARGET_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(78, 204, 163, 0.16)';
+        ctx.fill();
+      }
 
       // Static target zone ring
       ctx.beginPath();
       ctx.arc(CENTER_X, CENTER_Y, RING_TARGET_RADIUS, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(78, 204, 163, 0.7)';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(78, 204, 163, 0.95)';
+      ctx.lineWidth = targetWidth;
       ctx.stroke();
 
       // Shrinking beat ring
       ctx.beginPath();
       ctx.arc(CENTER_X, CENTER_Y, radius, 0, Math.PI * 2);
       ctx.strokeStyle = beatPulse > 0 ? '#ffffff' : '#e94560';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = ringWidth;
       ctx.stroke();
 
       drawPixelHeart(CENTER_X, CENTER_Y, 48, '#e94560');
@@ -1366,7 +1431,70 @@
       }
     }
 
+    function drawMobileHUD() {
+      const scale = Math.max(canvasDisplayScale, 0.28);
+      const px = (n) => Math.max(1, Math.round(n / scale));
+      const topH = px(42);
+      const botH = px(36);
+      const scoreValue = compressionPoints + correctTrivia * 50;
+      const secs = Math.ceil(remainingMs / 1000);
+      const mins = Math.floor(secs / 60);
+      const timeStr = mins + ':' + String(secs % 60).padStart(2, '0');
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(6, 8, 20, 0.84)';
+      ctx.fillRect(0, 0, CW, topH);
+      ctx.fillRect(0, CH - botH, CW, botH);
+
+      const barX = px(10);
+      const barY = px(7);
+      const barW = CW - px(20);
+      const barH = px(8);
+      ctx.fillStyle = '#24182c';
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = oxygen > 60 ? '#4ecca3' : oxygen > 30 ? '#f5c518' : '#ff4444';
+      ctx.fillRect(barX, barY, Math.max(0, (oxygen / 100) * barW), barH);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = Math.max(2, px(1));
+      ctx.strokeRect(barX, barY, barW, barH);
+
+      const heartSize = px(15);
+      const heartGap = heartSize + px(5);
+      for (let i = 0; i < MAX_LIVES; i++) {
+        drawLifeHeart(px(10) + i * heartGap, topH - px(20), heartSize, i < lives);
+      }
+
+      ctx.font = uiFont(px(12));
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(Math.round(oxygen) + '%', px(12) + MAX_LIVES * heartGap, topH - px(8));
+
+      ctx.font = uiFont(px(14));
+      ctx.textAlign = 'right';
+      ctx.fillStyle = secs <= 10 ? '#ff4444' : '#f5c518';
+      ctx.fillText(timeStr, CW - px(10), topH - px(8));
+
+      const base = CH - px(12);
+      ctx.font = uiFont(px(12));
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(tr('score') + ' ' + scoreValue, px(10), base);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f5c518';
+      ctx.fillText(BPM + ' ' + tr('beat'), CENTER_X, base);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = streak >= STREAK_MULTIPLIER_AT ? '#f5c518' : '#eaeaea';
+      ctx.fillText(tr('streak') + ' ' + streak, CW - px(10), base);
+      ctx.restore();
+    }
+
     function drawHUD() {
+      if (canvasDisplayScale < 0.85) {
+        drawMobileHUD();
+        return;
+      }
+
       drawOxygenBar();
       drawTimerAndLives();
 
@@ -1386,14 +1514,30 @@
     function drawHitFeedback(now) {
       if (!lastHitFeedback.text) return;
       const age = now - lastHitFeedback.time;
-      if (age > 600) return;
+      const hold = 720;
+      if (age > hold) return;
 
-      ctx.globalAlpha = 1 - age / 600;
-      ctx.fillStyle = lastHitFeedback.color;
-      ctx.font = uiFont(14);
+      const compact = canvasDisplayScale < 0.85;
+      const scale = Math.max(canvasDisplayScale, 0.28);
+      const size = compact ? Math.round(22 / scale) : 14;
+      const rise = compact ? Math.round(118 / scale) : 95;
+      const pop = age < 140 ? 0.72 + (age / 140) * 0.4 : 1.12 - Math.min(1, (age - 140) / (hold - 140)) * 0.12;
+      const fade = age < hold * 0.72 ? 1 : 1 - (age - hold * 0.72) / (hold * 0.28);
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, fade);
+      ctx.translate(CENTER_X, CENTER_Y - rise);
+      ctx.scale(pop, pop);
+      ctx.font = uiFont(size);
       ctx.textAlign = 'center';
-      ctx.fillText(lastHitFeedback.text, CENTER_X, CENTER_Y - 95);
-      ctx.globalAlpha = 1;
+      ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(4, Math.round(size * 0.16));
+      ctx.strokeStyle = '#140814';
+      ctx.strokeText(lastHitFeedback.text, 0, 0);
+      ctx.fillStyle = lastHitFeedback.color;
+      ctx.fillText(lastHitFeedback.text, 0, 0);
+      ctx.restore();
     }
 
     function paintWorld(now, scene) {
@@ -1770,11 +1914,13 @@
       loadLocalizedContent(),
       CPRHero.Gfx.load()
     ]).then(() => {
+      document.body.classList.add('assets-ready');
       fetchGlobalLeaderboard().then(renderLeaderboard).catch(() => {
         showOfflineLeaderboard();
       });
       requestAnimationFrame(gameLoop);
     }).catch((err) => {
+      document.body.classList.add('assets-ready');
       console.error('Failed to load game content JSON:', err);
       requestAnimationFrame(gameLoop);
     });

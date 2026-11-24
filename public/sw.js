@@ -1,8 +1,9 @@
-const CACHE_NAME = 'cpr-hero-v16';
+const CACHE_NAME = 'cpr-hero-v18';
 const PRECACHE = [
   '/',
   '/index.html',
   '/css/style.css',
+  '/css/mobile-layout.css',
   '/js/i18n.js',
   '/js/leaderboard.js',
   '/js/rhythm.js',

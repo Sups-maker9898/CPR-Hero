@@ -144,6 +144,31 @@
       margin: 0 auto;
     }
 
+    #canvas-stage::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 84px;
+      height: 8px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, var(--accent), var(--yellow), transparent);
+      background-size: 200% 100%;
+      animation: loadbar 0.9s linear infinite;
+      z-index: 6;
+      pointer-events: none;
+      box-shadow: 0 0 0 2px #000;
+    }
+
+    body.assets-ready #canvas-stage::after {
+      display: none;
+    }
+
+    @keyframes loadbar {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
     /* The 800x600 game drawing surface (internal resolution stays fixed) */
     #game-canvas {
       display: block;
@@ -226,10 +251,14 @@
       transition: transform 0.1s;
     }
 
-    .retro-btn:hover, .retro-btn:focus {
+    .retro-btn:hover, .retro-btn:focus-visible {
       background: #ff6b81;
       transform: scale(1.04);
       outline: 2px solid var(--yellow);
+    }
+
+    .retro-btn:active {
+      transform: translateY(3px) scale(0.98);
     }
 
     .retro-btn.secondary {
@@ -283,9 +312,42 @@
 
     #leaderboard-list li {
       display: flex;
+      align-items: center;
       justify-content: space-between;
+      gap: 8px;
       border-bottom: 1px solid var(--line);
       padding: 2px 4px;
+    }
+
+    .board-place {
+      color: var(--yellow);
+      min-width: 1.6em;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+
+    .board-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .board-score {
+      color: var(--green);
+      flex: 0 0 auto;
+      text-align: right;
+    }
+
+    .board-empty {
+      justify-content: center;
+    }
+
+    .board-empty .board-name {
+      text-align: center;
+      white-space: normal;
     }
 
     #trivia-options {
@@ -943,554 +1005,6 @@
       display: none;
     }
 
-    /* ==========================================================
-       PHONE APP LAYOUT — desktop styles above stay unchanged
-    ========================================================== */
-    @media (max-width: 768px) {
-      html, body {
-        height: 100%;
-        height: 100dvh;
-        overflow: hidden;
-        background: var(--mobile-bg);
-      }
-
-      body {
-        min-height: 100dvh;
-        min-height: 100svh;
-      }
-
-      body::after {
-        opacity: 0.45;
-      }
-
-      #app-layout {
-        flex-direction: column;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        justify-content: flex-start;
-        width: 100%;
-        max-width: none;
-        height: 100dvh;
-        height: 100svh;
-        margin: 0;
-        padding: env(safe-area-inset-top) 0 0;
-        gap: 0;
-        overflow: hidden;
-      }
-
-      #main-column {
-        flex: 1 1 auto;
-        width: 100%;
-        max-width: none;
-        min-height: 0;
-        overflow: hidden;
-      }
-
-      header,
-      #leaderboard-panel,
-      #mobile-tabbar {
-        flex-shrink: 0;
-      }
-
-      header {
-        padding: 10px 12px 4px;
-      }
-
-      header h1 {
-        font-size: 15px;
-        letter-spacing: 1px;
-      }
-
-      header p {
-        display: none;
-      }
-
-      #pwa-hint {
-        display: none;
-      }
-
-      /* Scores leave the mission screen and open from the BOARD tab. */
-      #leaderboard-panel {
-        display: none;
-      }
-
-      body.mobile-board #leaderboard-panel {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 200;
-        width: auto;
-        max-width: none;
-        max-height: none;
-        margin: 0;
-        padding: calc(14px + env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom));
-        background: #1a1a2e;
-        border: none;
-        border-top: 3px solid var(--green);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      body.mobile-board #leaderboard-head {
-        justify-content: space-between;
-        margin-bottom: 14px;
-      }
-
-      body.mobile-board #leaderboard-panel h3 {
-        font-size: 11px;
-      }
-
-      body.mobile-board #board-play-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: auto;
-        min-height: 40px;
-        padding: 8px 12px;
-        font-size: 8px;
-      }
-
-      body.mobile-board #leaderboard-list {
-        font-size: 10px;
-        line-height: 2.2;
-      }
-
-      body.mobile-board #leaderboard-list li {
-        padding: 8px 2px;
-        border-bottom: 1px solid rgba(78, 204, 163, 0.28);
-      }
-
-      body.mobile-board header,
-      body.mobile-board #game-container {
-        visibility: hidden;
-        pointer-events: none;
-      }
-
-      #game-container {
-        flex: 1 1 auto;
-        width: 100%;
-        max-width: none;
-        min-height: 0;
-        padding: 0 8px 8px;
-        display: flex;
-        flex-direction: column;
-      }
-
-      #canvas-stage {
-        position: relative;
-        container-type: size;
-        container-name: stage;
-        width: 100%;
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        overflow: hidden;
-      }
-
-      /* Full 4:3 scene, scaled to the slot. Nothing is cropped. */
-      #game-canvas {
-        width: min(100cqw, calc((100cqh - 210px) * 4 / 3));
-        height: auto;
-        max-width: 100%;
-        max-height: none;
-        aspect-ratio: 4 / 3;
-        flex: 0 0 auto;
-        object-fit: fill;
-        object-position: center center;
-        border-width: 3px;
-        box-shadow: 0 0 14px rgba(233, 69, 96, 0.28);
-      }
-
-      #canvas-stage:not(:has(.overlay.active)) {
-        justify-content: center;
-      }
-
-      #canvas-stage:not(:has(.overlay.active)) #game-canvas {
-        width: min(100cqw, calc(100cqh * 4 / 3));
-      }
-
-      .overlay {
-        position: static;
-        inset: auto;
-        flex: 1 1 auto;
-        align-self: stretch;
-        width: 100%;
-        min-height: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        justify-content: flex-start;
-        background: #12122e;
-        border-top: 3px solid var(--accent2);
-        padding: 12px 10px 12px;
-        gap: 10px;
-      }
-
-      #start-overlay.active {
-        gap: 8px;
-        padding: 8px 10px 10px;
-        justify-content: flex-start;
-        overflow: hidden;
-      }
-
-      #start-overlay h2 {
-        font-size: 11px;
-      }
-
-      #start-overlay > p {
-        display: none;
-      }
-
-      #start-overlay .retro-input,
-      #start-overlay .retro-btn {
-        min-height: 42px;
-        padding: 8px 10px;
-      }
-
-      .overlay h2 {
-        font-size: 12px;
-        line-height: 1.5;
-      }
-
-      .overlay p, .overlay label {
-        font-size: 8px;
-        line-height: 1.7;
-      }
-
-      .retro-input {
-        font-size: 11px;
-        width: min(320px, 92%);
-        min-height: 48px;
-      }
-
-      .retro-btn {
-        font-size: 9px;
-        width: min(320px, 92%);
-        min-height: 50px;
-        padding: 12px 14px;
-      }
-
-      #trivia-options {
-        width: 100%;
-        gap: 8px;
-      }
-
-      #trivia-options .retro-btn,
-      #scenario-options .retro-btn {
-        font-size: 8px;
-        text-align: left;
-        width: 100%;
-        min-height: 52px;
-      }
-
-      #scenario-actions .retro-btn {
-        min-height: 48px;
-        width: auto;
-        flex: 1 1 46%;
-      }
-
-      #scenario-line,
-      #scenario-report {
-        font-size: 8px;
-      }
-
-      #scenario-overlay.scenario-vn {
-        justify-content: flex-start;
-        padding: 0;
-        overflow: hidden;
-        background: #12122e;
-        gap: 0;
-      }
-
-      #scenario-body {
-        flex: 1 1 auto;
-        min-height: 0;
-        margin-top: 0;
-        padding: 8px;
-        gap: 6px;
-        justify-content: flex-start;
-        overflow-y: auto;
-      }
-
-      #scenario-hud {
-        margin-top: 0;
-        padding: 6px 8px;
-      }
-
-      #scenario-dialog {
-        min-height: 0;
-        padding: 6px;
-        gap: 8px;
-      }
-
-      #scenario-line {
-        min-height: 0;
-      }
-
-      #scenario-actions .retro-btn {
-        min-height: 42px;
-        padding: 8px 10px;
-      }
-
-      #scenario-exit-btn {
-        top: 8px;
-        left: 8px;
-        right: auto;
-        z-index: 30;
-        width: auto;
-        min-height: 40px;
-        padding: 8px 12px;
-        font-size: 8px;
-      }
-
-      #game-exit-confirm {
-        top: 56px;
-        left: 8px;
-      }
-
-      #scenario-portrait,
-      #scenario-portrait-art {
-        width: 52px;
-        min-width: 52px;
-        height: 52px;
-      }
-
-      #trivia-question {
-        font-size: 9px !important;
-      }
-
-      #trivia-lives {
-        font-size: 22px;
-        letter-spacing: 6px;
-      }
-
-      #score-breakdown {
-        font-size: 8px;
-        width: 100%;
-      }
-
-      #touch-hint {
-        font-size: 8px;
-        margin-top: 8px;
-        flex-shrink: 0;
-      }
-
-      #compress-btn {
-        max-width: none;
-        width: 100%;
-        margin: 8px 0 0;
-        min-height: 58px;
-        font-size: 11px;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-
-      #ai-assistant {
-        display: none;
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        max-width: none;
-        min-height: 0;
-        max-height: none;
-        z-index: 200;
-        border: none;
-        border-top: 3px solid var(--green);
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: calc(62px + env(safe-area-inset-bottom));
-      }
-
-      body.mobile-coach #ai-assistant {
-        display: flex;
-      }
-
-      body.mobile-coach #main-column {
-        visibility: hidden;
-        pointer-events: none;
-      }
-
-      .assistant-header {
-        padding: 12px 12px 12px 12px;
-        position: relative;
-      }
-
-      #mobile-coach-close {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: auto;
-        min-width: 44px;
-        min-height: 44px;
-        background: var(--accent2);
-        color: #fff;
-        border: 2px solid var(--green);
-        font-family: var(--font);
-        font-size: 10px;
-        cursor: pointer;
-      }
-
-      .assistant-title {
-        font-size: 11px;
-      }
-
-      .assistant-title .coach-sub {
-        font-size: 8px;
-      }
-
-      #assistant-chat {
-        min-height: 0;
-      }
-
-      .chat-msg,
-      .chat-typing,
-      #assistant-input {
-        font-size: 10px;
-        line-height: 1.65;
-      }
-
-      .topic-chip {
-        font-size: 8px;
-        min-height: 40px;
-        padding: 8px 10px;
-      }
-
-      #assistant-input-row {
-        padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
-      }
-
-      #assistant-input {
-        min-height: 46px;
-      }
-
-      #assistant-send {
-        font-size: 10px;
-        min-width: 64px;
-        min-height: 46px;
-      }
-
-      #mobile-tabbar {
-        display: flex;
-        flex-shrink: 0;
-        width: 100%;
-        background: var(--tabbar);
-        border-top: 3px solid var(--accent2);
-        padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-        gap: 8px;
-        z-index: 300;
-      }
-
-      .mobile-tab {
-        flex: 1;
-        font-family: var(--font);
-        font-size: 8px;
-        min-height: 48px;
-        background: var(--accent2);
-        color: #c8c8d8;
-        border: 2px solid #335588;
-        cursor: pointer;
-      }
-
-      .mobile-tab.active {
-        background: var(--accent);
-        color: #fff;
-        border-color: #fff;
-      }
-    }
-
-    @media (max-width: 768px) and (max-height: 500px) {
-      header p,
-      #pwa-hint,
-      #leaderboard-panel {
-        display: none;
-      }
-
-      header {
-        padding: 6px 8px 2px;
-      }
-
-      header h1 {
-        font-size: 12px;
-      }
-
-      #app-layout {
-        flex-direction: row;
-        padding-top: env(safe-area-inset-top);
-      }
-
-      #main-column {
-        flex: 1;
-      }
-
-      #game-container {
-        flex-direction: row;
-        align-items: stretch;
-        gap: 8px;
-        padding: 4px 8px 8px;
-      }
-
-      #canvas-stage {
-        flex: 1;
-        flex-direction: row;
-        align-items: stretch;
-        justify-content: flex-start;
-      }
-
-      #canvas-stage:has(.overlay.active) #game-canvas,
-      #canvas-stage:not(:has(.overlay.active)) #game-canvas {
-        width: auto;
-        height: min(100cqh, calc(58cqw * 3 / 4));
-        max-height: 100%;
-      }
-
-      .overlay {
-        flex: 1 1 auto;
-        width: auto;
-        min-width: 0;
-        height: 100%;
-        border-top: none;
-        border-left: 3px solid var(--accent2);
-      }
-
-      #compress-btn {
-        width: 120px;
-        writing-mode: horizontal-tb;
-        margin: 0;
-        align-self: stretch;
-      }
-
-      #touch-hint {
-        display: none !important;
-      }
-
-      #mobile-tabbar {
-        flex-direction: column;
-        width: 72px;
-        border-top: none;
-        border-left: 3px solid var(--accent2);
-        padding: 8px 6px;
-      }
-
-      .mobile-tab {
-        font-size: 7px;
-        line-height: 1.4;
-      }
-
-      #ai-assistant {
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-right: 72px;
-      }
-
-      body.mobile-board #leaderboard-panel {
-        right: 72px;
-        padding-bottom: 16px;
-      }
-    }
 
     #settings-panel {
       position: fixed;
