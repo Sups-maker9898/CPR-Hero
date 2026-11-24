@@ -172,7 +172,7 @@ export default {
     if (url.pathname === "/api/leaderboard" && request.method === "GET") {
       try {
         const { results } = await env.DB
-          .prepare("SELECT name, score FROM scores ORDER BY score DESC LIMIT 5")
+          .prepare("SELECT name, MAX(score) AS score FROM scores GROUP BY name ORDER BY score DESC LIMIT 5")
           .all();
 
         return Response.json(results);
@@ -202,11 +202,33 @@ export default {
         }
 
         const cleanName = name.trim().toUpperCase().substring(0, 10);
+        const existing = await env.DB
+          .prepare("SELECT id, score FROM scores WHERE name = ? COLLATE NOCASE ORDER BY score DESC, id ASC LIMIT 1")
+          .bind(cleanName)
+          .first();
 
-        await env.DB
-          .prepare("INSERT INTO scores (name, score) VALUES (?, ?)")
-          .bind(cleanName, score)
-          .run();
+        if (!existing) {
+          await env.DB
+            .prepare("INSERT INTO scores (name, score) VALUES (?, ?)")
+            .bind(cleanName, score)
+            .run();
+        } else {
+          if (score > existing.score) {
+            await env.DB
+              .prepare("UPDATE scores SET name = ?, score = ?, date = CURRENT_TIMESTAMP WHERE id = ?")
+              .bind(cleanName, score, existing.id)
+              .run();
+          } else {
+            await env.DB
+              .prepare("UPDATE scores SET name = ? WHERE id = ?")
+              .bind(cleanName, existing.id)
+              .run();
+          }
+          await env.DB
+            .prepare("DELETE FROM scores WHERE name = ? COLLATE NOCASE AND id != ?")
+            .bind(cleanName, existing.id)
+            .run();
+        }
 
         return Response.json({
           success: true,
